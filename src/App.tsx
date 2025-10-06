@@ -45,6 +45,8 @@ import ReturnPolicy from "./pages/ReturnPolicy";
 import DMCA from "./pages/DMCA";
 import SellerAgreement from "./pages/SellerAgreement";
 import Accessibility from "./pages/Accessibility";
+import Notifications from "./pages/Notifications";
+import SellerOnboarding from "./pages/SellerOnboarding";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +73,8 @@ const App = () => (
             <Route path="/collection" element={<MyCollection />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/disputes" element={<Disputes />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/seller-onboarding" element={<SellerOnboarding />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/ceo" element={<CEO />} />
             <Route path="/admin/cfo" element={<CFO />} />
