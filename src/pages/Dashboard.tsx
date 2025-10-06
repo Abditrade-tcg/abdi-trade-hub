@@ -62,32 +62,33 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10 flex">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-border bg-card flex flex-col">
-        <div className="p-6">
+      <aside className="w-64 border-r border-border bg-card/50 backdrop-blur-sm flex flex-col shadow-lg">
+        <div className="p-6 border-b border-border/50">
           <Link to="/" className="flex items-center">
             <img src={logo} alt="AbdiTrade" className="h-12" />
           </Link>
         </div>
 
         <nav className="flex-1 px-3 space-y-1">
-          {navItems.map((item) => (
+          {navItems.map((item, index) => (
             <Link
               key={item.label}
               to={item.href}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-foreground hover:bg-muted transition-colors"
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200 hover:translate-x-1 group animate-fade-in"
+              style={{ animationDelay: `${index * 50}ms` }}
             >
-              <item.icon className="h-5 w-5" />
+              <item.icon className="h-5 w-5 group-hover:scale-110 transition-transform" />
               <span className="text-sm font-medium">{item.label}</span>
             </Link>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-border">
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-            <Avatar>
-              <AvatarFallback className="bg-primary text-primary-foreground">
+        <div className="p-4 border-t border-border/50">
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 hover:shadow-lg transition-all duration-300 cursor-pointer group">
+            <Avatar className="ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all">
+              <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-semibold">
                 M
               </AvatarFallback>
             </Avatar>
@@ -102,20 +103,23 @@ const Dashboard = () => {
         </div>
 
         <div className="px-4 pb-4">
-          <div className="p-3 rounded-lg border border-border">
-            <h3 className="text-xs font-semibold mb-2">POPULAR COMMUNITIES</h3>
+          <div className="p-3 rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm hover:border-primary/30 transition-all duration-300">
+            <h3 className="text-xs font-semibold mb-3 flex items-center gap-2">
+              <div className="h-1 w-1 rounded-full bg-primary animate-pulse" />
+              POPULAR COMMUNITIES
+            </h3>
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-red-500" />
-                <span className="text-xs">Pokémon Trading Card...</span>
+              <div className="flex items-center gap-2 hover:translate-x-1 transition-transform cursor-pointer group">
+                <div className="h-2 w-2 rounded-full bg-red-500 group-hover:scale-125 transition-transform" />
+                <span className="text-xs group-hover:text-primary transition-colors">Pokémon Trading Card...</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-blue-500" />
-                <span className="text-xs">Magic The Gathering</span>
+              <div className="flex items-center gap-2 hover:translate-x-1 transition-transform cursor-pointer group">
+                <div className="h-2 w-2 rounded-full bg-blue-500 group-hover:scale-125 transition-transform" />
+                <span className="text-xs group-hover:text-primary transition-colors">Magic The Gathering</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-purple-500" />
-                <span className="text-xs">Yu-Gi-Oh!</span>
+              <div className="flex items-center gap-2 hover:translate-x-1 transition-transform cursor-pointer group">
+                <div className="h-2 w-2 rounded-full bg-purple-500 group-hover:scale-125 transition-transform" />
+                <span className="text-xs group-hover:text-primary transition-colors">Yu-Gi-Oh!</span>
               </div>
             </div>
           </div>
@@ -125,7 +129,7 @@ const Dashboard = () => {
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
         {/* Header */}
-        <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-lg border-b border-border">
+        <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-sm">
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex-1 max-w-xl">
               <div className="relative">
@@ -133,7 +137,7 @@ const Dashboard = () => {
                 <Input
                   type="search"
                   placeholder="Search cards, sets, or users..."
-                  className="pl-10"
+                  className="pl-10 bg-secondary/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 transition-all"
                 />
               </div>
             </div>
@@ -142,6 +146,7 @@ const Dashboard = () => {
                 variant="ghost"
                 size="icon"
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="hover:bg-primary/10 hover:text-primary transition-all"
               >
                 {theme === "dark" ? (
                   <Sun className="h-5 w-5" />
@@ -149,22 +154,24 @@ const Dashboard = () => {
                   <Moon className="h-5 w-5" />
                 )}
               </Button>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="hover:bg-primary/10 hover:text-primary transition-all relative">
                 <Bell className="h-5 w-5" />
+                <span className="absolute top-1 right-1 h-2 w-2 bg-accent rounded-full animate-pulse" />
               </Button>
-              <Button variant="default">Sign Out</Button>
+              <Button variant="default" className="hover:shadow-lg transition-all">Sign Out</Button>
             </div>
           </div>
         </header>
 
         <div className="p-6">
           {/* Hero Stats Card */}
-          <Card className="mb-6 bg-gradient-to-br from-primary/10 via-accent/5 to-transparent border-primary/20">
-            <CardHeader>
+          <Card className="mb-6 bg-gradient-to-br from-primary/10 via-accent/5 to-transparent border-primary/20 shadow-xl hover:shadow-2xl transition-all duration-300 animate-fade-in overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500" />
+            <CardHeader className="relative z-10">
               <div className="flex items-start justify-between">
                 <div>
                   <CardTitle className="text-2xl mb-2 flex items-center gap-2">
-                    <TrendingUp className="h-6 w-6 text-primary" />
+                    <TrendingUp className="h-6 w-6 text-primary animate-pulse" />
                     Discover Rare Finds
                   </CardTitle>
                   <p className="text-muted-foreground">
@@ -172,25 +179,26 @@ const Dashboard = () => {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="default" className="gap-2">
+                  <Button variant="default" className="gap-2 hover:scale-105 transition-all shadow-lg hover:shadow-primary/20">
                     <Store className="h-4 w-4" />
                     Browse Marketplace
                   </Button>
-                  <Button variant="outline" className="gap-2">
+                  <Button variant="outline" className="gap-2 hover:scale-105 transition-all hover:border-primary/50">
                     <Gavel className="h-4 w-4" />
                     View Auctions
                   </Button>
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="relative z-10">
               <div className="grid grid-cols-4 gap-4">
                 {stats.map((stat, index) => (
                   <div
                     key={index}
-                    className="text-center p-4 rounded-lg bg-background/50 backdrop-blur-sm border border-border"
+                    className="text-center p-4 rounded-lg bg-background/80 backdrop-blur-sm border border-border/50 hover:border-primary/30 hover:scale-105 transition-all duration-300 cursor-pointer group animate-fade-in"
+                    style={{ animationDelay: `${index * 100}ms` }}
                   >
-                    <div className="text-2xl font-bold text-primary">
+                    <div className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent group-hover:scale-110 transition-transform">
                       {stat.value}
                     </div>
                     <div className="text-sm text-muted-foreground">
@@ -206,7 +214,7 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 xl:grid-cols-[1fr,380px] gap-6">
             <div className="space-y-6">
               {/* Feed Tabs */}
-              <Card>
+              <Card className="shadow-lg hover:shadow-xl transition-all duration-300 animate-fade-in">
                 <CardContent className="p-0">
                   <div className="flex border-b border-border">
                     {feedTabs.map((tab) => (
@@ -238,7 +246,7 @@ const Dashboard = () => {
                     <p className="text-muted-foreground mb-4">
                       Be the first to share something!
                     </p>
-                    <Button variant="default" className="gap-2">
+                    <Button variant="default" className="gap-2 hover:scale-105 transition-all shadow-lg hover:shadow-primary/20">
                       <MessageSquare className="h-4 w-4" />
                       Create Post
                     </Button>
@@ -250,7 +258,7 @@ const Dashboard = () => {
             {/* Right Sidebar */}
             <div className="space-y-6">
               {/* Live Activity */}
-              <Card>
+              <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-accent/20 animate-fade-in" style={{ animationDelay: '100ms' }}>
                 <CardHeader>
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Flame className="h-4 w-4 text-accent" />
@@ -277,7 +285,7 @@ const Dashboard = () => {
               </Card>
 
               {/* Trending Cards */}
-              <Card>
+              <Card className="shadow-lg hover:shadow-xl transition-all duration-300 animate-fade-in" style={{ animationDelay: '200ms' }}>
                 <CardHeader>
                   <CardTitle className="text-sm flex items-center gap-2">
                     <TrendingUp className="h-4 w-4 text-primary" />
@@ -298,7 +306,7 @@ const Dashboard = () => {
               </Card>
 
               {/* Top Traders */}
-              <Card>
+              <Card className="shadow-lg hover:shadow-xl transition-all duration-300 animate-fade-in" style={{ animationDelay: '300ms' }}>
                 <CardHeader>
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Award className="h-4 w-4 text-accent" />
@@ -319,7 +327,7 @@ const Dashboard = () => {
               </Card>
 
               {/* Community Rules */}
-              <Card>
+              <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-primary/20 animate-fade-in" style={{ animationDelay: '400ms' }}>
                 <CardHeader>
                   <CardTitle className="text-sm">Community Rules</CardTitle>
                 </CardHeader>
