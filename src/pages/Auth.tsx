@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Auth = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [signInEmail, setSignInEmail] = useState("");
   const [signInPassword, setSignInPassword] = useState("");
@@ -18,12 +19,14 @@ const Auth = () => {
 
   const handleSignIn = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Sign in:", { signInEmail, signInPassword });
+    // TODO: Add actual authentication logic
+    navigate("/dashboard");
   };
 
   const handleSignUp = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Sign up:", { signUpFirstName, signUpLastName, signUpEmail, signUpPassword });
+    // TODO: Add actual authentication logic
+    navigate("/dashboard");
   };
 
   const passwordRequirements = [
