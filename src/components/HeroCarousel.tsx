@@ -59,18 +59,18 @@ export const HeroCarousel = () => {
           delay: 3000,
         }),
       ]}
-      className="w-full max-w-md mx-auto"
+      className="w-full max-w-lg mx-auto"
     >
       <CarouselContent>
         {featuredCards.map((card, index) => (
           <CarouselItem key={index}>
             <div className="p-1">
               <Card className="border-2 border-primary/20 bg-card/50 backdrop-blur-sm overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-2xl">
-                <div className="relative aspect-[2/3] w-full max-h-[400px]">
+                <div className="relative aspect-[2/3] w-full max-h-[500px]">
                   <img
                     src={card.image}
                     alt={`${card.name} from ${card.game}`}
-                    className="w-full h-full object-contain p-3"
+                    className="w-full h-full object-contain p-4"
                   />
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/95 to-transparent p-4">
                     <div className="space-y-1">
