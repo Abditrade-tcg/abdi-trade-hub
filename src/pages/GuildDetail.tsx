@@ -68,6 +68,9 @@ const GuildDetail = () => {
       likes: 24,
       comments: 8,
       isPinned: true,
+      reputation: 4.8,
+      userType: "Individual",
+      guildOrigin: "Pokemon Masters",
     },
     {
       id: 2,
@@ -77,6 +80,9 @@ const GuildDetail = () => {
       content: "Looking to trade my Pikachu Illustrator for multiple high-value cards. Open to offers! Must be mint condition.",
       likes: 18,
       comments: 12,
+      reputation: 4.9,
+      userType: "LGS",
+      guildOrigin: "Pokemon Masters",
     },
     {
       id: 3,
@@ -86,6 +92,9 @@ const GuildDetail = () => {
       content: "What's everyone's opinion on the new set releasing next month? The preview cards look incredible!",
       likes: 45,
       comments: 23,
+      reputation: 4.6,
+      userType: "Individual",
+      guildOrigin: "Pokemon Masters",
     },
   ];
 
@@ -251,15 +260,31 @@ const GuildDetail = () => {
                           </Avatar>
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-2">
-                              <div>
-                                <p className="font-medium">{post.author}</p>
-                                <p className="text-xs text-muted-foreground">{post.timeAgo}</p>
+                              <div className="flex items-center gap-2">
+                                <div>
+                                  <p className="font-medium">{post.author}</p>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <div className="flex items-center gap-1">
+                                      <Star className="h-3 w-3 text-accent fill-accent" />
+                                      <span className="text-xs font-medium text-muted-foreground">{post.reputation}</span>
+                                    </div>
+                                    <span className="text-xs text-muted-foreground">•</span>
+                                    <Badge variant={post.userType === "LGS" ? "default" : "outline"} className="text-xs h-5">
+                                      {post.userType}
+                                    </Badge>
+                                    <span className="text-xs text-muted-foreground">•</span>
+                                    <span className="text-xs text-muted-foreground">{post.guildOrigin}</span>
+                                  </div>
+                                </div>
                               </div>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground">{post.timeAgo}</span>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </div>
-                            <p className="text-sm mb-4">{post.content}</p>
+                            <p className="text-sm mb-4 mt-2">{post.content}</p>
                             <div className="flex items-center gap-4">
                               <Button variant="ghost" size="sm" className="gap-2">
                                 <ThumbsUp className="h-4 w-4" />
@@ -295,15 +320,31 @@ const GuildDetail = () => {
                             </Avatar>
                             <div className="flex-1">
                               <div className="flex items-center justify-between mb-2">
-                                <div>
-                                  <p className="font-medium">{post.author}</p>
-                                  <p className="text-xs text-muted-foreground">{post.timeAgo}</p>
+                                <div className="flex items-center gap-2">
+                                  <div>
+                                    <p className="font-medium">{post.author}</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <div className="flex items-center gap-1">
+                                        <Star className="h-3 w-3 text-accent fill-accent" />
+                                        <span className="text-xs font-medium text-muted-foreground">{post.reputation}</span>
+                                      </div>
+                                      <span className="text-xs text-muted-foreground">•</span>
+                                      <Badge variant={post.userType === "LGS" ? "default" : "outline"} className="text-xs h-5">
+                                        {post.userType}
+                                      </Badge>
+                                      <span className="text-xs text-muted-foreground">•</span>
+                                      <span className="text-xs text-muted-foreground">{post.guildOrigin}</span>
+                                    </div>
+                                  </div>
                                 </div>
-                                <Button variant="ghost" size="icon">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">{post.timeAgo}</span>
+                                  <Button variant="ghost" size="icon">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </div>
-                              <p className="text-sm mb-4">{post.content}</p>
+                              <p className="text-sm mb-4 mt-2">{post.content}</p>
                               <div className="flex items-center gap-4">
                                 <Button variant="ghost" size="sm" className="gap-2">
                                   <ThumbsUp className="h-4 w-4" />
@@ -343,15 +384,31 @@ const GuildDetail = () => {
                             </Avatar>
                             <div className="flex-1">
                               <div className="flex items-center justify-between mb-2">
-                                <div>
-                                  <p className="font-medium">{post.author}</p>
-                                  <p className="text-xs text-muted-foreground">{post.timeAgo}</p>
+                                <div className="flex items-center gap-2">
+                                  <div>
+                                    <p className="font-medium">{post.author}</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <div className="flex items-center gap-1">
+                                        <Star className="h-3 w-3 text-accent fill-accent" />
+                                        <span className="text-xs font-medium text-muted-foreground">{post.reputation}</span>
+                                      </div>
+                                      <span className="text-xs text-muted-foreground">•</span>
+                                      <Badge variant={post.userType === "LGS" ? "default" : "outline"} className="text-xs h-5">
+                                        {post.userType}
+                                      </Badge>
+                                      <span className="text-xs text-muted-foreground">•</span>
+                                      <span className="text-xs text-muted-foreground">{post.guildOrigin}</span>
+                                    </div>
+                                  </div>
                                 </div>
-                                <Button variant="ghost" size="icon">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">{post.timeAgo}</span>
+                                  <Button variant="ghost" size="icon">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </div>
-                              <p className="text-sm mb-4">{post.content}</p>
+                              <p className="text-sm mb-4 mt-2">{post.content}</p>
                               <div className="flex items-center gap-4">
                                 <Button variant="ghost" size="sm" className="gap-2">
                                   <ThumbsUp className="h-4 w-4" />
