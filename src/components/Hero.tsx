@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Shield } from "lucide-react";
-import heroImage from "@/assets/hero-cards.jpg";
+import { HeroCarousel } from "./HeroCarousel";
 
 const Hero = () => {
   return (
@@ -61,14 +61,12 @@ const Hero = () => {
             </div>
           </div>
 
-          {/* Right Image */}
+          {/* Right Carousel */}
           <div className="relative animate-scale-in" style={{ animationDelay: "0.2s" }}>
             <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent opacity-20 blur-3xl" />
-            <img
-              src={heroImage}
-              alt="Premium trading cards showcase"
-              className="relative rounded-2xl shadow-[0_0_80px_hsl(263,70%,50%,0.3)] w-full h-auto"
-            />
+            <div className="relative">
+              <HeroCarousel />
+            </div>
           </div>
         </div>
       </div>
