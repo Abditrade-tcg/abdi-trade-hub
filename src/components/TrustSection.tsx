@@ -30,7 +30,7 @@ const TrustSection = () => {
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl sm:text-5xl font-bold mb-4">
             Trade with{" "}
-            <span className="bg-gradient-to-r from-[hsl(263,70%,50%)] to-[hsl(280,65%,45%)] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[hsl(221,83%,32%)] to-[hsl(221,83%,50%)] bg-clip-text text-transparent">
               Confidence
             </span>
           </h2>

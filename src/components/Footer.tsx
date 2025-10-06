@@ -9,7 +9,7 @@ const Footer = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div>
-            <h3 className="text-2xl font-bold bg-gradient-to-r from-[hsl(263,70%,50%)] to-[hsl(38,92%,50%)] bg-clip-text text-transparent mb-3">
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-[hsl(221,83%,32%)] to-[hsl(45,93%,47%)] bg-clip-text text-transparent mb-3">
               AbdiTrade
             </h3>
             <p className="text-muted-foreground mb-4">

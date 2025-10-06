@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Menu, Search, User } from "lucide-react";
 import { useState } from "react";
+import logo from "@/assets/abditrade-logo.png";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -11,8 +12,8 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <a href="/" className="text-2xl font-bold bg-gradient-to-r from-[hsl(263,70%,50%)] to-[hsl(38,92%,50%)] bg-clip-text text-transparent">
-              AbdiTrade
+            <a href="/" className="flex items-center">
+              <img src={logo} alt="AbdiTrade" className="h-8" />
             </a>
           </div>
 

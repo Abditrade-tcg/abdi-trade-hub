@@ -15,7 +15,7 @@ const CTASection = () => {
         <div className="max-w-4xl mx-auto text-center animate-fade-in">
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
             Ready to Start{" "}
-            <span className="bg-gradient-to-r from-[hsl(263,70%,50%)] via-[hsl(280,65%,45%)] to-[hsl(38,92%,50%)] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[hsl(221,83%,32%)] via-[hsl(221,83%,50%)] to-[hsl(45,93%,47%)] bg-clip-text text-transparent">
               Trading?
             </span>
           </h2>

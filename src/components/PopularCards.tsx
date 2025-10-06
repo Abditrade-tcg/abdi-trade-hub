@@ -43,7 +43,7 @@ const PopularCards = () => {
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl sm:text-5xl font-bold mb-4">
             Trending{" "}
-            <span className="bg-gradient-to-r from-[hsl(38,92%,50%)] to-[hsl(30,90%,55%)] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[hsl(45,93%,47%)] to-[hsl(45,93%,55%)] bg-clip-text text-transparent">
               Cards
             </span>
           </h2>

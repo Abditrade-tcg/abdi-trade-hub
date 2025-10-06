@@ -25,7 +25,7 @@ const Hero = () => {
             
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
               Trade Your{" "}
-              <span className="bg-gradient-to-r from-[hsl(263,70%,50%)] to-[hsl(280,65%,45%)] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[hsl(221,83%,32%)] to-[hsl(221,83%,50%)] bg-clip-text text-transparent">
                 Favorite Cards
               </span>{" "}
               Securely
