@@ -16,7 +16,7 @@ const Navbar = () => {
           {/* Logo */}
           <div className="flex items-center">
             <a href="/" className="flex items-center">
-              <img src={logo} alt="AbdiTrade" className="h-16 sm:h-20" />
+              <img src={logo} alt="Abditrade" className="h-16 sm:h-20" />
             </a>
           </div>
 

@@ -80,7 +80,7 @@ const Profile = () => {
       <aside className="w-64 border-r border-border bg-card/50 backdrop-blur-sm flex flex-col shadow-lg">
         <div className="p-6 border-b border-border/50">
           <Link to="/" className="flex items-center">
-            <img src={logo} alt="AbdiTrade" className="h-12" />
+            <img src={logo} alt="Abditrade" className="h-12" />
           </Link>
         </div>
 
@@ -281,7 +281,7 @@ const Profile = () => {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Store className="h-5 w-5 text-accent" />
-                        Start Selling on AbdiTrade
+                        Start Selling on Abditrade
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">

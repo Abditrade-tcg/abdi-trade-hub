@@ -20,7 +20,7 @@ const CTASection = () => {
             </span>
           </h2>
           <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-            Join thousands of collectors who trust AbdiTrade for their trading card needs. Create your account today and discover your next favorite card.
+            Join thousands of collectors who trust Abditrade for their trading card needs. Create your account today and discover your next favorite card.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

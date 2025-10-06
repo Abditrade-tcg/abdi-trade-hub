@@ -10,7 +10,7 @@ const Footer = () => {
           {/* Brand */}
           <div>
             <h3 className="text-2xl font-bold bg-gradient-to-r from-[hsl(221,83%,32%)] to-[hsl(45,93%,47%)] bg-clip-text text-transparent mb-3">
-              AbdiTrade
+              Abditrade
             </h3>
             <p className="text-muted-foreground mb-4">
               The premier marketplace for trading card enthusiasts worldwide.
@@ -66,7 +66,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-border pt-8 text-center text-sm text-muted-foreground">
-          <p>© {currentYear} AbdiTrade. All rights reserved.</p>
+          <p>© {currentYear} Abditrade. All rights reserved.</p>
         </div>
       </div>
     </footer>
