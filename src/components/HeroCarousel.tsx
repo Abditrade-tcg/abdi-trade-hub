@@ -59,7 +59,7 @@ export const HeroCarousel = () => {
           delay: 3000,
         }),
       ]}
-      className="w-full max-w-sm mx-auto"
+      className="w-full max-w-md mx-auto"
     >
       <CarouselContent>
         {featuredCards.map((card, index) => (
