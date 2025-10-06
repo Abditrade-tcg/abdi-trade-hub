@@ -13,7 +13,7 @@ const Navbar = () => {
           {/* Logo */}
           <div className="flex items-center">
             <a href="/" className="flex items-center">
-              <img src={logo} alt="AbdiTrade" className="h-8" />
+              <img src={logo} alt="AbdiTrade" className="h-10 sm:h-12" />
             </a>
           </div>
 
