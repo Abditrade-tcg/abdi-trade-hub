@@ -16,6 +16,11 @@ import MyCollection from "./pages/MyCollection";
 import Profile from "./pages/Profile";
 import Disputes from "./pages/Disputes";
 import Admin from "./pages/Admin";
+import CEO from "./pages/CEO";
+import CFO from "./pages/CFO";
+import HR from "./pages/HR";
+import TrustSafety from "./pages/TrustSafety";
+import OrderManagement from "./pages/OrderManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +45,11 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/disputes" element={<Disputes />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/ceo" element={<CEO />} />
+            <Route path="/admin/cfo" element={<CFO />} />
+            <Route path="/admin/hr" element={<HR />} />
+            <Route path="/admin/trust-safety" element={<TrustSafety />} />
+            <Route path="/admin/order-management" element={<OrderManagement />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

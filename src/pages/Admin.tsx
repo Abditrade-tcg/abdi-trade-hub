@@ -218,17 +218,57 @@ const Admin = () => {
                   <Card className="shadow-lg hover:shadow-xl transition-all duration-300">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
-                        <BarChart3 className="h-5 w-5" />
-                        Platform Analytics
+                        <Shield className="h-5 w-5" />
+                        Employee Departments
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-center py-12">
-                        <BarChart3 className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-                        <p className="text-muted-foreground">Analytics data will appear here</p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Track user activity, sales, and platform growth
-                        </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <Link to="/admin/ceo">
+                          <Button variant="outline" className="w-full justify-start gap-2 h-auto py-4 hover:bg-primary/10 hover:border-primary">
+                            <Shield className="h-5 w-5 text-primary" />
+                            <div className="text-left">
+                              <div className="font-medium">CEO Dashboard</div>
+                              <div className="text-xs text-muted-foreground">Executive overview & insights</div>
+                            </div>
+                          </Button>
+                        </Link>
+                        <Link to="/admin/cfo">
+                          <Button variant="outline" className="w-full justify-start gap-2 h-auto py-4 hover:bg-primary/10 hover:border-primary">
+                            <DollarSign className="h-5 w-5 text-green-500" />
+                            <div className="text-left">
+                              <div className="font-medium">CFO Dashboard</div>
+                              <div className="text-xs text-muted-foreground">Financial analytics & reports</div>
+                            </div>
+                          </Button>
+                        </Link>
+                        <Link to="/admin/hr">
+                          <Button variant="outline" className="w-full justify-start gap-2 h-auto py-4 hover:bg-primary/10 hover:border-primary">
+                            <UserCog className="h-5 w-5 text-blue-500" />
+                            <div className="text-left">
+                              <div className="font-medium">HR Dashboard</div>
+                              <div className="text-xs text-muted-foreground">Employee management</div>
+                            </div>
+                          </Button>
+                        </Link>
+                        <Link to="/admin/trust-safety">
+                          <Button variant="outline" className="w-full justify-start gap-2 h-auto py-4 hover:bg-primary/10 hover:border-primary">
+                            <Shield className="h-5 w-5 text-orange-500" />
+                            <div className="text-left">
+                              <div className="font-medium">Trust & Safety</div>
+                              <div className="text-xs text-muted-foreground">Moderation & disputes</div>
+                            </div>
+                          </Button>
+                        </Link>
+                        <Link to="/admin/order-management" className="md:col-span-2">
+                          <Button variant="outline" className="w-full justify-start gap-2 h-auto py-4 hover:bg-primary/10 hover:border-primary">
+                            <Package className="h-5 w-5 text-purple-500" />
+                            <div className="text-left">
+                              <div className="font-medium">Order Management</div>
+                              <div className="text-xs text-muted-foreground">Verification & order tracking</div>
+                            </div>
+                          </Button>
+                        </Link>
                       </div>
                     </CardContent>
                   </Card>
