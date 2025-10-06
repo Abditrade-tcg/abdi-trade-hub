@@ -7,6 +7,8 @@ import { ThemeProvider } from "next-themes";
 import { CartProvider } from "@/contexts/CartContext";
 import Index from "./pages/Index";
 import Cart from "./pages/Cart";
+import Sell from "./pages/Sell";
+import Inventory from "./pages/Inventory";
 import Auth from "./pages/Auth";
 import AuthenticatedHome from "./pages/AuthenticatedHome";
 import Guilds from "./pages/Guilds";
@@ -77,6 +79,8 @@ const App = () => (
             {/* Public Pages */}
             <Route path="/browse" element={<Browse />} />
             <Route path="/cart" element={<Cart />} />
+            <Route path="/sell" element={<Sell />} />
+            <Route path="/inventory" element={<Inventory />} />
             <Route path="/listings/:id" element={<ListingDetail />} />
             <Route path="/how-it-works" element={<HowItWorksPage />} />
             <Route path="/about" element={<About />} />
