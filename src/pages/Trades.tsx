@@ -191,10 +191,12 @@ const Trades = () => {
                     Review offers, send counter-offers, and complete secure trades
                   </p>
                 </div>
-                <Button variant="accent" className="gap-2 hover:scale-105 transition-all shadow-lg hover:shadow-accent/20">
-                  <ArrowLeftRight className="h-4 w-4" />
-                  Propose Trade
-                </Button>
+                <Link to="/create-trade">
+                  <Button variant="accent" className="gap-2 hover:scale-105 transition-all shadow-lg hover:shadow-accent/20">
+                    <ArrowLeftRight className="h-4 w-4" />
+                    Propose Trade
+                  </Button>
+                </Link>
               </div>
             </CardHeader>
           </Card>
@@ -271,10 +273,12 @@ const Trades = () => {
                   <p className="text-muted-foreground mb-6">
                     Start trading with other collectors to build your collection!
                   </p>
-                  <Button variant="accent" className="gap-2 hover:scale-105 transition-all shadow-lg hover:shadow-accent/20">
-                    <ArrowLeftRight className="h-4 w-4" />
-                    Propose Your First Trade
-                  </Button>
+                  <Link to="/create-trade">
+                    <Button variant="accent" className="gap-2 hover:scale-105 transition-all shadow-lg hover:shadow-accent/20">
+                      <ArrowLeftRight className="h-4 w-4" />
+                      Propose Your First Trade
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             </div>

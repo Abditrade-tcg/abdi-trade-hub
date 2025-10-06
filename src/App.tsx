@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Cart from "./pages/Cart";
 import Sell from "./pages/Sell";
 import Inventory from "./pages/Inventory";
+import CreateTrade from "./pages/CreateTrade";
 import Auth from "./pages/Auth";
 import AuthenticatedHome from "./pages/AuthenticatedHome";
 import Guilds from "./pages/Guilds";
@@ -64,6 +65,7 @@ const App = () => (
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/auctions" element={<Auctions />} />
             <Route path="/trades" element={<Trades />} />
+            <Route path="/create-trade" element={<CreateTrade />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/collection" element={<MyCollection />} />
