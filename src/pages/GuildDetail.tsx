@@ -19,7 +19,6 @@ import {
   ArrowLeft,
   Send,
   ThumbsUp,
-  Share2,
   Pin,
   MoreHorizontal,
   Image as ImageIcon,
@@ -71,6 +70,10 @@ const GuildDetail = () => {
       reputation: 4.8,
       userType: "Individual",
       guildOrigin: "Pokemon Masters",
+      recentComments: [
+        { author: "GradeExpert", content: "Definitely get it graded! That card is worth it.", avatar: "GE" },
+        { author: "CardCollector", content: "PSA 10 potential for sure!", avatar: "CC" },
+      ],
     },
     {
       id: 2,
@@ -83,6 +86,10 @@ const GuildDetail = () => {
       reputation: 4.9,
       userType: "LGS",
       guildOrigin: "Pokemon Masters",
+      recentComments: [
+        { author: "TradeKing", content: "I have a few cards that might interest you. DM me!", avatar: "TK" },
+        { author: "Collector99", content: "What's your valuation on the Illustrator?", avatar: "C9" },
+      ],
     },
     {
       id: 3,
@@ -95,6 +102,10 @@ const GuildDetail = () => {
       reputation: 4.6,
       userType: "Individual",
       guildOrigin: "Pokemon Masters",
+      recentComments: [
+        { author: "SetExpert", content: "The artwork is amazing! Can't wait for the release.", avatar: "SE" },
+        { author: "NewCollector", content: "I'm pre-ordering a booster box for sure!", avatar: "NC" },
+      ],
     },
   ];
 
@@ -285,7 +296,7 @@ const GuildDetail = () => {
                               </div>
                             </div>
                             <p className="text-sm mb-4 mt-2">{post.content}</p>
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-4 mb-4">
                               <Button variant="ghost" size="sm" className="gap-2">
                                 <ThumbsUp className="h-4 w-4" />
                                 {post.likes}
@@ -294,11 +305,25 @@ const GuildDetail = () => {
                                 <MessageSquare className="h-4 w-4" />
                                 {post.comments}
                               </Button>
-                              <Button variant="ghost" size="sm" className="gap-2">
-                                <Share2 className="h-4 w-4" />
-                                Share
-                              </Button>
                             </div>
+                            {post.recentComments && post.recentComments.length > 0 && (
+                              <div className="mt-4 pt-4 border-t border-border space-y-3">
+                                <p className="text-xs font-medium text-muted-foreground">Recent Comments</p>
+                                {post.recentComments.map((comment, idx) => (
+                                  <div key={idx} className="flex items-start gap-2 bg-muted/30 p-3 rounded-lg">
+                                    <Avatar className="h-6 w-6">
+                                      <AvatarFallback className="text-xs bg-gradient-to-br from-secondary to-secondary/50">
+                                        {comment.avatar}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-medium">{comment.author}</p>
+                                      <p className="text-xs text-muted-foreground mt-1">{comment.content}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </CardContent>
@@ -345,7 +370,7 @@ const GuildDetail = () => {
                                 </div>
                               </div>
                               <p className="text-sm mb-4 mt-2">{post.content}</p>
-                              <div className="flex items-center gap-4">
+                              <div className="flex items-center gap-4 mb-4">
                                 <Button variant="ghost" size="sm" className="gap-2">
                                   <ThumbsUp className="h-4 w-4" />
                                   {post.likes}
@@ -354,11 +379,25 @@ const GuildDetail = () => {
                                   <MessageSquare className="h-4 w-4" />
                                   {post.comments}
                                 </Button>
-                                <Button variant="ghost" size="sm" className="gap-2">
-                                  <Share2 className="h-4 w-4" />
-                                  Share
-                                </Button>
                               </div>
+                              {post.recentComments && post.recentComments.length > 0 && (
+                                <div className="mt-4 pt-4 border-t border-border space-y-3">
+                                  <p className="text-xs font-medium text-muted-foreground">Recent Comments</p>
+                                  {post.recentComments.map((comment, idx) => (
+                                    <div key={idx} className="flex items-start gap-2 bg-muted/30 p-3 rounded-lg">
+                                      <Avatar className="h-6 w-6">
+                                        <AvatarFallback className="text-xs bg-gradient-to-br from-secondary to-secondary/50">
+                                          {comment.avatar}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-medium">{comment.author}</p>
+                                        <p className="text-xs text-muted-foreground mt-1">{comment.content}</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </CardContent>
@@ -409,7 +448,7 @@ const GuildDetail = () => {
                                 </div>
                               </div>
                               <p className="text-sm mb-4 mt-2">{post.content}</p>
-                              <div className="flex items-center gap-4">
+                              <div className="flex items-center gap-4 mb-4">
                                 <Button variant="ghost" size="sm" className="gap-2">
                                   <ThumbsUp className="h-4 w-4" />
                                   {post.likes}
@@ -418,11 +457,25 @@ const GuildDetail = () => {
                                   <MessageSquare className="h-4 w-4" />
                                   {post.comments}
                                 </Button>
-                                <Button variant="ghost" size="sm" className="gap-2">
-                                  <Share2 className="h-4 w-4" />
-                                  Share
-                                </Button>
                               </div>
+                              {post.recentComments && post.recentComments.length > 0 && (
+                                <div className="mt-4 pt-4 border-t border-border space-y-3">
+                                  <p className="text-xs font-medium text-muted-foreground">Recent Comments</p>
+                                  {post.recentComments.map((comment, idx) => (
+                                    <div key={idx} className="flex items-start gap-2 bg-muted/30 p-3 rounded-lg">
+                                      <Avatar className="h-6 w-6">
+                                        <AvatarFallback className="text-xs bg-gradient-to-br from-secondary to-secondary/50">
+                                          {comment.avatar}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-medium">{comment.author}</p>
+                                        <p className="text-xs text-muted-foreground mt-1">{comment.content}</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </CardContent>
