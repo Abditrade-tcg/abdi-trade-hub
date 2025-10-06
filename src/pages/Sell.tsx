@@ -206,19 +206,21 @@ const Sell = () => {
                       </div>
                     </div>
 
-                    {/* Images */}
+                    {/* Images - Auto-fetched */}
                     <div className="space-y-4">
-                      <h3 className="font-semibold text-lg border-b pb-2">Images</h3>
+                      <h3 className="font-semibold text-lg border-b pb-2">Card Images</h3>
                       
-                      <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer">
-                        <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                        <p className="text-sm font-medium mb-1">Upload card images</p>
-                        <p className="text-xs text-muted-foreground mb-3">
-                          Add up to 5 images (JPG, PNG, or WEBP)
-                        </p>
-                        <Button type="button" variant="outline" size="sm">
-                          Choose Files
-                        </Button>
+                      <div className="border border-border rounded-lg p-6 bg-primary/5">
+                        <div className="flex items-start gap-3">
+                          <Upload className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="font-medium mb-1">Images Auto-Fetched</p>
+                            <p className="text-sm text-muted-foreground">
+                              Card images are automatically retrieved from our database when you enter the card details. 
+                              If the card is not found, you'll have the option to add custom images.
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
 

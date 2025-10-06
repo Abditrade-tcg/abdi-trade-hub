@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeftRight, Plus, Minus, DollarSign, Search, User } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeftRight, DollarSign, Search, User, Filter } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 const CreateTrade = () => {
@@ -20,6 +20,10 @@ const CreateTrade = () => {
   const [theirCards, setTheirCards] = useState<any[]>([]);
   const [cashOffer, setCashOffer] = useState("");
   const [message, setMessage] = useState("");
+  const [myCardSearch, setMyCardSearch] = useState("");
+  const [theirCardSearch, setTheirCardSearch] = useState("");
+  const [myCardFilter, setMyCardFilter] = useState("all");
+  const [theirCardFilter, setTheirCardFilter] = useState("all");
 
   // Mock data
   const myInventory = [
@@ -53,6 +57,20 @@ const CreateTrade = () => {
       return [...prev, card];
     });
   };
+
+  const filteredMyInventory = myInventory.filter(card => {
+    const matchesSearch = card.name.toLowerCase().includes(myCardSearch.toLowerCase()) ||
+                         card.set.toLowerCase().includes(myCardSearch.toLowerCase());
+    if (myCardFilter === "all") return matchesSearch;
+    return matchesSearch; // Can add more filters later
+  });
+
+  const filteredTheirInventory = theirInventory.filter(card => {
+    const matchesSearch = card.name.toLowerCase().includes(theirCardSearch.toLowerCase()) ||
+                         card.set.toLowerCase().includes(theirCardSearch.toLowerCase());
+    if (theirCardFilter === "all") return matchesSearch;
+    return matchesSearch; // Can add more filters later
+  });
 
   const myTotal = myCards.reduce((sum, c) => sum + c.value, 0);
   const theirTotal = theirCards.reduce((sum, c) => sum + c.value, 0);
@@ -177,71 +195,134 @@ const CreateTrade = () => {
               {/* My Cards */}
               <Card>
                 <CardHeader>
-                  <CardTitle>2. Your Cards</CardTitle>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>2. Your Cards</span>
+                    <Badge variant="outline">{myCards.length} selected</Badge>
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {myInventory.map(card => {
-                      const isSelected = myCards.some(c => c.id === card.id);
-                      return (
-                        <div
-                          key={card.id}
-                          onClick={() => toggleMyCard(card)}
-                          className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                            isSelected 
-                              ? "border-primary bg-primary/10 shadow-lg" 
-                              : "border-border hover:border-primary/50"
-                          }`}
-                        >
-                          <div className="aspect-[2.5/3.5] bg-gradient-to-br from-primary/5 to-accent/5 rounded-lg flex items-center justify-center text-4xl mb-3">
-                            {card.image}
-                          </div>
-                          <h4 className="font-medium text-sm mb-1 line-clamp-1">{card.name}</h4>
-                          <p className="text-xs text-muted-foreground mb-2">{card.set}</p>
-                          <p className="text-sm font-semibold text-primary">${card.value}</p>
-                          {isSelected && (
-                            <Badge className="mt-2 w-full justify-center">Selected</Badge>
-                          )}
-                        </div>
-                      );
-                    })}
+                <CardContent className="space-y-4">
+                  {/* Search and Filter */}
+                  <div className="flex gap-2">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search your cards..."
+                        value={myCardSearch}
+                        onChange={(e) => setMyCardSearch(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    <Select value={myCardFilter} onValueChange={setMyCardFilter}>
+                      <SelectTrigger className="w-[140px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Cards</SelectItem>
+                        <SelectItem value="selected">Selected</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                </CardContent>
-              </Card>
 
-              {/* Their Cards */}
-              {selectedUser && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>3. {selectedUser.username}'s Cards</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {theirInventory.map(card => {
-                        const isSelected = theirCards.some(c => c.id === card.id);
+                  {/* Cards Grid */}
+                  {filteredMyInventory.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p>No cards found</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[500px] overflow-y-auto pr-2">
+                      {filteredMyInventory.map(card => {
+                        const isSelected = myCards.some(c => c.id === card.id);
                         return (
                           <div
                             key={card.id}
-                            onClick={() => toggleTheirCard(card)}
+                            onClick={() => toggleMyCard(card)}
                             className={`border rounded-lg p-4 cursor-pointer transition-all ${
                               isSelected 
-                                ? "border-accent bg-accent/10 shadow-lg" 
-                                : "border-border hover:border-accent/50"
+                                ? "border-primary bg-primary/10 shadow-lg" 
+                                : "border-border hover:border-primary/50"
                             }`}
                           >
-                            <div className="aspect-[2.5/3.5] bg-gradient-to-br from-accent/5 to-primary/5 rounded-lg flex items-center justify-center text-4xl mb-3">
+                            <div className="aspect-[2.5/3.5] bg-gradient-to-br from-primary/5 to-accent/5 rounded-lg flex items-center justify-center text-4xl mb-3">
                               {card.image}
                             </div>
                             <h4 className="font-medium text-sm mb-1 line-clamp-1">{card.name}</h4>
                             <p className="text-xs text-muted-foreground mb-2">{card.set}</p>
-                            <p className="text-sm font-semibold text-accent">${card.value}</p>
+                            <p className="text-sm font-semibold text-primary">${card.value}</p>
                             {isSelected && (
-                              <Badge variant="secondary" className="mt-2 w-full justify-center">Selected</Badge>
+                              <Badge className="mt-2 w-full justify-center">Selected</Badge>
                             )}
                           </div>
                         );
                       })}
                     </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {selectedUser && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span>3. {selectedUser.username}'s Cards</span>
+                      <Badge variant="outline">{theirCards.length} selected</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Search and Filter */}
+                    <div className="flex gap-2">
+                      <div className="flex-1 relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search their cards..."
+                          value={theirCardSearch}
+                          onChange={(e) => setTheirCardSearch(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                      <Select value={theirCardFilter} onValueChange={setTheirCardFilter}>
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Cards</SelectItem>
+                          <SelectItem value="selected">Selected</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Cards Grid */}
+                    {filteredTheirInventory.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <p>No cards found</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[500px] overflow-y-auto pr-2">
+                        {filteredTheirInventory.map(card => {
+                          const isSelected = theirCards.some(c => c.id === card.id);
+                          return (
+                            <div
+                              key={card.id}
+                              onClick={() => toggleTheirCard(card)}
+                              className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                                isSelected 
+                                  ? "border-accent bg-accent/10 shadow-lg" 
+                                  : "border-border hover:border-accent/50"
+                              }`}
+                            >
+                              <div className="aspect-[2.5/3.5] bg-gradient-to-br from-accent/5 to-primary/5 rounded-lg flex items-center justify-center text-4xl mb-3">
+                                {card.image}
+                              </div>
+                              <h4 className="font-medium text-sm mb-1 line-clamp-1">{card.name}</h4>
+                              <p className="text-xs text-muted-foreground mb-2">{card.set}</p>
+                              <p className="text-sm font-semibold text-accent">${card.value}</p>
+                              {isSelected && (
+                                <Badge variant="secondary" className="mt-2 w-full justify-center">Selected</Badge>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}
