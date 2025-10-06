@@ -29,10 +29,17 @@ import logo from "@/assets/abditrade-logo.png";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
+import { CheckoutModal } from "@/components/modals/CheckoutModal";
+import { TradeModal } from "@/components/modals/TradeModal";
+import { CardDetailModal } from "@/components/modals/CardDetailModal";
 
 const GuildDetail = () => {
   const { guildId } = useParams();
   const [newPost, setNewPost] = useState("");
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [showTrade, setShowTrade] = useState(false);
+  const [showCardDetail, setShowCardDetail] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<any>(null);
 
   const navItems = [
     { icon: Home, label: "Home", href: "/dashboard" },
@@ -349,30 +356,71 @@ const GuildDetail = () => {
                                       {post.postType === "buy" && "Looking to buy"}
                                     </p>
                                   </div>
-                                  <div className="flex gap-2">
+                                   <div className="flex gap-2">
                                     {post.postType === "trade" && (
-                                      <Link to="/trades">
-                                        <Button size="sm" className="gap-2">
+                                      <>
+                                        <Button 
+                                          size="sm" 
+                                          variant="outline"
+                                          className="gap-2"
+                                          onClick={() => {
+                                            setSelectedPost(post);
+                                            setShowCardDetail(true);
+                                          }}
+                                        >
+                                          View Details
+                                        </Button>
+                                        <Button 
+                                          size="sm" 
+                                          className="gap-2"
+                                          onClick={() => {
+                                            setSelectedPost(post);
+                                            setShowTrade(true);
+                                          }}
+                                        >
                                           <ArrowLeftRight className="h-4 w-4" />
                                           Make Offer
                                         </Button>
-                                      </Link>
+                                      </>
                                     )}
                                     {post.postType === "sell" && (
-                                      <Link to="/orders">
-                                        <Button size="sm" className="gap-2">
+                                      <>
+                                        <Button 
+                                          size="sm" 
+                                          variant="outline"
+                                          className="gap-2"
+                                          onClick={() => {
+                                            setSelectedPost(post);
+                                            setShowCardDetail(true);
+                                          }}
+                                        >
+                                          View Details
+                                        </Button>
+                                        <Button 
+                                          size="sm" 
+                                          className="gap-2"
+                                          onClick={() => {
+                                            setSelectedPost(post);
+                                            setShowCheckout(true);
+                                          }}
+                                        >
                                           <ShoppingCart className="h-4 w-4" />
                                           Purchase
                                         </Button>
-                                      </Link>
+                                      </>
                                     )}
                                     {post.postType === "buy" && (
-                                      <Link to="/trades">
-                                        <Button size="sm" className="gap-2">
-                                          <Send className="h-4 w-4" />
-                                          Submit Offer
-                                        </Button>
-                                      </Link>
+                                      <Button 
+                                        size="sm" 
+                                        className="gap-2"
+                                        onClick={() => {
+                                          setSelectedPost(post);
+                                          setShowTrade(true);
+                                        }}
+                                      >
+                                        <Send className="h-4 w-4" />
+                                        Submit Offer
+                                      </Button>
                                     )}
                                   </div>
                                 </div>
@@ -730,6 +778,67 @@ const GuildDetail = () => {
           </div>
         </div>
       </main>
+
+      {/* Modals */}
+      {selectedPost && (
+        <>
+          <CheckoutModal
+            open={showCheckout}
+            onOpenChange={setShowCheckout}
+            items={[
+              {
+                name: `${selectedPost.content.substring(0, 50)}...`,
+                price: parseFloat(selectedPost.price?.replace(/[$,]/g, "") || "0"),
+                quantity: 1,
+              },
+            ]}
+            shippingOption="standard"
+          />
+
+          <TradeModal
+            open={showTrade}
+            onOpenChange={setShowTrade}
+            otherUser={{
+              name: selectedPost.author,
+              reputation: selectedPost.reputation,
+              items: [
+                {
+                  id: "1",
+                  name: `${selectedPost.content.substring(0, 50)}...`,
+                  condition: "Near Mint",
+                  value: parseFloat(selectedPost.price?.replace(/[$,]/g, "") || "100"),
+                },
+              ],
+            }}
+            currentUserItems={[
+              { id: "1", name: "Charizard VMAX", condition: "Near Mint", value: 150 },
+              { id: "2", name: "Pikachu V", condition: "Mint", value: 75 },
+              { id: "3", name: "Mewtwo EX", condition: "Lightly Played", value: 50 },
+              { id: "4", name: "Umbreon VMAX", condition: "Near Mint", value: 200 },
+            ]}
+          />
+
+          <CardDetailModal
+            open={showCardDetail}
+            onOpenChange={setShowCardDetail}
+            card={{
+              name: `${selectedPost.content.substring(0, 40)}`,
+              set: "Base Set",
+              rarity: "Rare Holo",
+              price: parseFloat(selectedPost.price?.replace(/[$,]/g, "") || "100"),
+              avgPrice: parseFloat(selectedPost.price?.replace(/[$,]/g, "") || "100") * 0.9,
+              condition: "Near Mint",
+              cardNumber: "4",
+              description: selectedPost.content,
+              seller: {
+                name: selectedPost.author,
+                reputation: selectedPost.reputation,
+              },
+              availableForTrade: selectedPost.postType === "trade" || selectedPost.postType === "sell",
+            }}
+          />
+        </>
+      )}
     </div>
   );
 };
