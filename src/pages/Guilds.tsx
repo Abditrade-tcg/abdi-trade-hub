@@ -97,14 +97,24 @@ const Guilds = () => {
       isJoined: false,
       trending: true,
     },
+    {
+      id: 5,
+      name: "Sports Card Traders",
+      description: "Baseball, basketball, football and more",
+      members: 3892,
+      posts: 1456,
+      category: "Sports Cards",
+      image: "⚾",
+      isJoined: false,
+      trending: false,
+    },
   ];
 
   const myGuilds = featuredGuilds.filter(g => g.isJoined);
 
   const categories = [
-    { name: "All", count: 247, icon: "🎯" },
     { name: "Pokemon", count: 89, icon: "🎴" },
-    { name: "Magic", count: 62, icon: "🔮" },
+    { name: "Magic: The Gathering", count: 62, icon: "🔮" },
     { name: "Yu-Gi-Oh", count: 45, icon: "⚔️" },
     { name: "Sports Cards", count: 34, icon: "⚾" },
     { name: "Vintage", count: 17, icon: "💎" },
@@ -222,7 +232,6 @@ const Guilds = () => {
                           <SelectItem value="yugioh">Yu-Gi-Oh</SelectItem>
                           <SelectItem value="sports">Sports Cards</SelectItem>
                           <SelectItem value="vintage">Vintage</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -249,7 +258,7 @@ const Guilds = () => {
         <div className="p-6">
           {/* Page Header */}
           <div className="mb-6 animate-fade-in">
-            <h1 className="text-3xl font-bold mb-2">Trading Guilds</h1>
+            <h1 className="text-3xl font-bold mb-2">Trading Card Guilds</h1>
             <p className="text-muted-foreground">Connect with collectors, share strategies, and grow your collection</p>
           </div>
 
@@ -299,77 +308,36 @@ const Guilds = () => {
 
                 <TabsContent value="featured" className="space-y-4 mt-6">
                   {featuredGuilds.map((guild) => (
-                    <Card
-                      key={guild.id}
-                      className="shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
-                    >
-                      <CardContent className="p-6">
-                        <div className="flex items-start gap-4">
-                          <div className="text-4xl">{guild.image}</div>
-                          <div className="flex-1">
-                            <div className="flex items-start justify-between mb-2">
-                              <div>
-                                <h3 className="text-lg font-bold flex items-center gap-2">
-                                  {guild.name}
-                                  {guild.trending && (
-                                    <Badge variant="secondary" className="gap-1">
-                                      <Flame className="h-3 w-3" />
-                                      Trending
-                                    </Badge>
-                                  )}
-                                </h3>
-                                <p className="text-sm text-muted-foreground mt-1">{guild.description}</p>
-                              </div>
-                              {guild.isJoined ? (
-                                <Button size="sm" variant="outline" className="gap-2">
-                                  <Shield className="h-3 w-3" />
-                                  Joined
-                                </Button>
-                              ) : (
-                                <Button size="sm" className="gap-2">
-                                  <UserPlus className="h-3 w-3" />
-                                  Join
-                                </Button>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-4 mt-4">
-                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <Users className="h-4 w-4" />
-                                {guild.members.toLocaleString()} members
-                              </div>
-                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <MessageSquare className="h-4 w-4" />
-                                {guild.posts.toLocaleString()} posts
-                              </div>
-                              <Badge variant="outline">{guild.category}</Badge>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </TabsContent>
-
-                <TabsContent value="my-guilds" className="space-y-4 mt-6">
-                  {myGuilds.length > 0 ? (
-                    myGuilds.map((guild) => (
-                      <Card
-                        key={guild.id}
-                        className="shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
-                      >
+                    <Link key={guild.id} to={`/guilds/${guild.id}`}>
+                      <Card className="shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group">
                         <CardContent className="p-6">
                           <div className="flex items-start gap-4">
                             <div className="text-4xl">{guild.image}</div>
                             <div className="flex-1">
                               <div className="flex items-start justify-between mb-2">
                                 <div>
-                                  <h3 className="text-lg font-bold">{guild.name}</h3>
+                                  <h3 className="text-lg font-bold flex items-center gap-2">
+                                    {guild.name}
+                                    {guild.trending && (
+                                      <Badge variant="secondary" className="gap-1">
+                                        <Flame className="h-3 w-3" />
+                                        Trending
+                                      </Badge>
+                                    )}
+                                  </h3>
                                   <p className="text-sm text-muted-foreground mt-1">{guild.description}</p>
                                 </div>
-                                <Button size="sm" variant="outline" className="gap-2">
-                                  <Settings className="h-3 w-3" />
-                                  Manage
-                                </Button>
+                                {guild.isJoined ? (
+                                  <Button size="sm" variant="outline" className="gap-2" onClick={(e) => e.preventDefault()}>
+                                    <Shield className="h-3 w-3" />
+                                    Joined
+                                  </Button>
+                                ) : (
+                                  <Button size="sm" className="gap-2" onClick={(e) => e.preventDefault()}>
+                                    <UserPlus className="h-3 w-3" />
+                                    Join
+                                  </Button>
+                                )}
                               </div>
                               <div className="flex items-center gap-4 mt-4">
                                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -380,11 +348,50 @@ const Guilds = () => {
                                   <MessageSquare className="h-4 w-4" />
                                   {guild.posts.toLocaleString()} posts
                                 </div>
+                                <Badge variant="outline">{guild.category}</Badge>
                               </div>
                             </div>
                           </div>
                         </CardContent>
                       </Card>
+                    </Link>
+                  ))}
+                </TabsContent>
+
+                <TabsContent value="my-guilds" className="space-y-4 mt-6">
+                  {myGuilds.length > 0 ? (
+                    myGuilds.map((guild) => (
+                      <Link key={guild.id} to={`/guilds/${guild.id}`}>
+                        <Card className="shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group">
+                          <CardContent className="p-6">
+                            <div className="flex items-start gap-4">
+                              <div className="text-4xl">{guild.image}</div>
+                              <div className="flex-1">
+                                <div className="flex items-start justify-between mb-2">
+                                  <div>
+                                    <h3 className="text-lg font-bold">{guild.name}</h3>
+                                    <p className="text-sm text-muted-foreground mt-1">{guild.description}</p>
+                                  </div>
+                                  <Button size="sm" variant="outline" className="gap-2" onClick={(e) => e.preventDefault()}>
+                                    <Settings className="h-3 w-3" />
+                                    Manage
+                                  </Button>
+                                </div>
+                                <div className="flex items-center gap-4 mt-4">
+                                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                    <Users className="h-4 w-4" />
+                                    {guild.members.toLocaleString()} members
+                                  </div>
+                                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                    <MessageSquare className="h-4 w-4" />
+                                    {guild.posts.toLocaleString()} posts
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </Link>
                     ))
                   ) : (
                     <Card className="shadow-lg">
@@ -404,48 +411,47 @@ const Guilds = () => {
                   {featuredGuilds
                     .filter((g) => g.trending)
                     .map((guild) => (
-                      <Card
-                        key={guild.id}
-                        className="shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
-                      >
-                        <CardContent className="p-6">
-                          <div className="flex items-start gap-4">
-                            <div className="text-4xl">{guild.image}</div>
-                            <div className="flex-1">
-                              <div className="flex items-start justify-between mb-2">
-                                <div>
-                                  <h3 className="text-lg font-bold flex items-center gap-2">
-                                    {guild.name}
-                                    <Badge variant="secondary" className="gap-1">
-                                      <TrendingUp className="h-3 w-3" />
-                                      Hot
-                                    </Badge>
-                                  </h3>
-                                  <p className="text-sm text-muted-foreground mt-1">{guild.description}</p>
+                      <Link key={guild.id} to={`/guilds/${guild.id}`}>
+                        <Card className="shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group">
+                          <CardContent className="p-6">
+                            <div className="flex items-start gap-4">
+                              <div className="text-4xl">{guild.image}</div>
+                              <div className="flex-1">
+                                <div className="flex items-start justify-between mb-2">
+                                  <div>
+                                    <h3 className="text-lg font-bold flex items-center gap-2">
+                                      {guild.name}
+                                      <Badge variant="secondary" className="gap-1">
+                                        <TrendingUp className="h-3 w-3" />
+                                        Hot
+                                      </Badge>
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground mt-1">{guild.description}</p>
+                                  </div>
+                                  {guild.isJoined ? (
+                                    <Button size="sm" variant="outline" onClick={(e) => e.preventDefault()}>Joined</Button>
+                                  ) : (
+                                    <Button size="sm" className="gap-2" onClick={(e) => e.preventDefault()}>
+                                      <UserPlus className="h-3 w-3" />
+                                      Join
+                                    </Button>
+                                  )}
                                 </div>
-                                {guild.isJoined ? (
-                                  <Button size="sm" variant="outline">Joined</Button>
-                                ) : (
-                                  <Button size="sm" className="gap-2">
-                                    <UserPlus className="h-3 w-3" />
-                                    Join
-                                  </Button>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-4 mt-4">
-                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                  <Users className="h-4 w-4" />
-                                  {guild.members.toLocaleString()} members
-                                </div>
-                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                  <MessageSquare className="h-4 w-4" />
-                                  {guild.posts.toLocaleString()} posts
+                                <div className="flex items-center gap-4 mt-4">
+                                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                    <Users className="h-4 w-4" />
+                                    {guild.members.toLocaleString()} members
+                                  </div>
+                                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                    <MessageSquare className="h-4 w-4" />
+                                    {guild.posts.toLocaleString()} posts
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                          </CardContent>
+                        </Card>
+                      </Link>
                     ))}
                 </TabsContent>
               </Tabs>

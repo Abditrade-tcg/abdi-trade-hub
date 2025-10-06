@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AuthenticatedHome from "./pages/AuthenticatedHome";
 import Guilds from "./pages/Guilds";
+import GuildDetail from "./pages/GuildDetail";
 import Marketplace from "./pages/Marketplace";
 import Auctions from "./pages/Auctions";
 import Trades from "./pages/Trades";
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<AuthenticatedHome />} />
             <Route path="/guilds" element={<Guilds />} />
+            <Route path="/guilds/:guildId" element={<GuildDetail />} />
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/auctions" element={<Auctions />} />
             <Route path="/trades" element={<Trades />} />
