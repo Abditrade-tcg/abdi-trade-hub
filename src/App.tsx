@@ -24,6 +24,14 @@ import HR from "./pages/HR";
 import TrustSafety from "./pages/TrustSafety";
 import OrderManagement from "./pages/OrderManagement";
 import NotFound from "./pages/NotFound";
+import Browse from "./pages/Browse";
+import ListingDetail from "./pages/ListingDetail";
+import HowItWorksPage from "./pages/HowItWorksPage";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import FAQ from "./pages/FAQ";
+import Fees from "./pages/Fees";
+import TrustSafetyPage from "./pages/TrustSafetyPage";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +62,17 @@ const App = () => (
             <Route path="/admin/hr" element={<HR />} />
             <Route path="/admin/trust-safety" element={<TrustSafety />} />
             <Route path="/admin/order-management" element={<OrderManagement />} />
+            
+            {/* Public Pages */}
+            <Route path="/browse" element={<Browse />} />
+            <Route path="/listings/:id" element={<ListingDetail />} />
+            <Route path="/how-it-works" element={<HowItWorksPage />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/fees" element={<Fees />} />
+            <Route path="/trust-safety" element={<TrustSafetyPage />} />
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
