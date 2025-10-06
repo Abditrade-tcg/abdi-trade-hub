@@ -47,6 +47,9 @@ import SellerAgreement from "./pages/SellerAgreement";
 import Accessibility from "./pages/Accessibility";
 import Notifications from "./pages/Notifications";
 import SellerOnboarding from "./pages/SellerOnboarding";
+import SellerStorefront from "./pages/SellerStorefront";
+import FollowsAndAlerts from "./pages/FollowsAndAlerts";
+import Warehouse from "./pages/Warehouse";
 
 const queryClient = new QueryClient();
 
@@ -75,6 +78,9 @@ const App = () => (
             <Route path="/disputes" element={<Disputes />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/seller-onboarding" element={<SellerOnboarding />} />
+            <Route path="/seller-storefront" element={<SellerStorefront />} />
+            <Route path="/follows-alerts" element={<FollowsAndAlerts />} />
+            <Route path="/warehouse" element={<Warehouse />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/ceo" element={<CEO />} />
             <Route path="/admin/cfo" element={<CFO />} />
