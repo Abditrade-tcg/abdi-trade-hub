@@ -29,6 +29,7 @@ import logo from "@/assets/abditrade-logo.png";
 import { useTheme } from "next-themes";
 
 const AuthenticatedHome = () => {
+  const [activeTab, setActiveTab] = useState("all");
   const { theme, setTheme } = useTheme();
 
   const navItems = [
@@ -50,6 +51,8 @@ const AuthenticatedHome = () => {
     { value: "98.5%", label: "Success Rate" },
     { value: "4.9/5", label: "Avg Rating" },
   ];
+
+  const feedTabs = ["all", "posts", "listings", "trades"];
 
   const communityRules = [
     "Be respectful to all traders",
@@ -207,10 +210,52 @@ const AuthenticatedHome = () => {
             </CardContent>
           </Card>
 
-          {/* Sidebar Widgets */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <div className="xl:col-span-2"></div>
-            
+          {/* Feed Section */}
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr,380px] gap-6">
+            <div className="space-y-6">
+              {/* Feed Tabs */}
+              <Card className="shadow-lg hover:shadow-xl transition-all duration-300 animate-fade-in">
+                <CardContent className="p-0">
+                  <div className="flex border-b border-border">
+                    {feedTabs.map((tab) => (
+                      <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={`flex-1 py-3 text-sm font-medium capitalize transition-colors relative ${
+                          activeTab === tab
+                            ? "text-primary"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {tab}
+                        {activeTab === tab && (
+                          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Empty State */}
+                  <div className="p-12 text-center">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+                      <MessageSquare className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">
+                      No posts available yet
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      Be the first to share something!
+                    </p>
+                    <Button variant="default" className="gap-2 hover:scale-105 transition-all shadow-lg hover:shadow-primary/20">
+                      <MessageSquare className="h-4 w-4" />
+                      Create Post
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Right Sidebar */}
             <div className="space-y-6">
               {/* Live Activity */}
               <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-accent/20 animate-fade-in" style={{ animationDelay: '100ms' }}>
