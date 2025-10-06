@@ -28,7 +28,7 @@ import { Link } from "react-router-dom";
 import logo from "@/assets/abditrade-logo.png";
 import { useTheme } from "next-themes";
 
-const Dashboard = () => {
+const AuthenticatedHome = () => {
   const [activeTab, setActiveTab] = useState("all");
   const { theme, setTheme } = useTheme();
 
@@ -353,4 +353,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default AuthenticatedHome;
