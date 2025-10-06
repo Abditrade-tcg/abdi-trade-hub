@@ -50,6 +50,7 @@ import SellerOnboarding from "./pages/SellerOnboarding";
 import SellerStorefront from "./pages/SellerStorefront";
 import FollowsAndAlerts from "./pages/FollowsAndAlerts";
 import Warehouse from "./pages/Warehouse";
+import Analytics from "./pages/Analytics";
 
 const queryClient = new QueryClient();
 
@@ -81,6 +82,7 @@ const App = () => (
             <Route path="/seller-storefront" element={<SellerStorefront />} />
             <Route path="/follows-alerts" element={<FollowsAndAlerts />} />
             <Route path="/warehouse" element={<Warehouse />} />
+            <Route path="/analytics" element={<Analytics />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/ceo" element={<CEO />} />
             <Route path="/admin/cfo" element={<CFO />} />
