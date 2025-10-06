@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import AuthenticatedHome from "./pages/AuthenticatedHome";
 import Marketplace from "./pages/Marketplace";
 import Auctions from "./pages/Auctions";
+import Trades from "./pages/Trades";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/dashboard" element={<AuthenticatedHome />} />
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/auctions" element={<Auctions />} />
+            <Route path="/trades" element={<Trades />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
