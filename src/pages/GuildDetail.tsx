@@ -70,6 +70,7 @@ const GuildDetail = () => {
       reputation: 4.8,
       userType: "Individual",
       guildOrigin: "Pokemon Masters",
+      postType: "discussion",
       recentComments: [
         { author: "GradeExpert", content: "Definitely get it graded! That card is worth it.", avatar: "GE" },
         { author: "CardCollector", content: "PSA 10 potential for sure!", avatar: "CC" },
@@ -86,6 +87,8 @@ const GuildDetail = () => {
       reputation: 4.9,
       userType: "LGS",
       guildOrigin: "Pokemon Masters",
+      postType: "trade",
+      price: "$5,000",
       recentComments: [
         { author: "TradeKing", content: "I have a few cards that might interest you. DM me!", avatar: "TK" },
         { author: "Collector99", content: "What's your valuation on the Illustrator?", avatar: "C9" },
@@ -102,9 +105,44 @@ const GuildDetail = () => {
       reputation: 4.6,
       userType: "Individual",
       guildOrigin: "Pokemon Masters",
+      postType: "discussion",
       recentComments: [
         { author: "SetExpert", content: "The artwork is amazing! Can't wait for the release.", avatar: "SE" },
         { author: "NewCollector", content: "I'm pre-ordering a booster box for sure!", avatar: "NC" },
+      ],
+    },
+    {
+      id: 4,
+      author: "CardShop Pro",
+      avatar: "CS",
+      timeAgo: "8h ago",
+      content: "Selling sealed Base Set booster box - authenticated and in mint condition. Serious buyers only!",
+      likes: 32,
+      comments: 15,
+      reputation: 5.0,
+      userType: "LGS",
+      guildOrigin: "Pokemon Masters",
+      postType: "sell",
+      price: "$15,000",
+      recentComments: [
+        { author: "SeriousBuyer", content: "Can you provide more photos?", avatar: "SB" },
+        { author: "Investor", content: "Interested! Sending DM.", avatar: "IN" },
+      ],
+    },
+    {
+      id: 5,
+      author: "NewCollector",
+      avatar: "NC",
+      timeAgo: "10h ago",
+      content: "Looking to buy Charizard cards from any era. Please show me what you have!",
+      likes: 12,
+      comments: 9,
+      reputation: 4.3,
+      userType: "Individual",
+      guildOrigin: "Pokemon Masters",
+      postType: "buy",
+      recentComments: [
+        { author: "CardDealer", content: "I have a few Charizards available. Check your DMs!", avatar: "CD" },
       ],
     },
   ];
@@ -296,6 +334,51 @@ const GuildDetail = () => {
                               </div>
                             </div>
                             <p className="text-sm mb-4 mt-2">{post.content}</p>
+                            
+                            {/* Quick Action Buttons */}
+                            {post.postType !== "discussion" && (
+                              <div className="mb-4 p-3 bg-primary/5 border border-primary/10 rounded-lg">
+                                <div className="flex items-center justify-between gap-3">
+                                  <div>
+                                    {post.price && (
+                                      <p className="text-lg font-bold text-primary">{post.price}</p>
+                                    )}
+                                    <p className="text-xs text-muted-foreground">
+                                      {post.postType === "trade" && "Open to trade offers"}
+                                      {post.postType === "sell" && "Available for purchase"}
+                                      {post.postType === "buy" && "Looking to buy"}
+                                    </p>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    {post.postType === "trade" && (
+                                      <Link to="/trades">
+                                        <Button size="sm" className="gap-2">
+                                          <ArrowLeftRight className="h-4 w-4" />
+                                          Make Offer
+                                        </Button>
+                                      </Link>
+                                    )}
+                                    {post.postType === "sell" && (
+                                      <Link to="/orders">
+                                        <Button size="sm" className="gap-2">
+                                          <ShoppingCart className="h-4 w-4" />
+                                          Purchase
+                                        </Button>
+                                      </Link>
+                                    )}
+                                    {post.postType === "buy" && (
+                                      <Link to="/trades">
+                                        <Button size="sm" className="gap-2">
+                                          <Send className="h-4 w-4" />
+                                          Submit Offer
+                                        </Button>
+                                      </Link>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
                             <div className="flex items-center gap-4 mb-4">
                               <Button variant="ghost" size="sm" className="gap-2">
                                 <ThumbsUp className="h-4 w-4" />
@@ -370,6 +453,51 @@ const GuildDetail = () => {
                                 </div>
                               </div>
                               <p className="text-sm mb-4 mt-2">{post.content}</p>
+                              
+                              {/* Quick Action Buttons */}
+                              {post.postType !== "discussion" && (
+                                <div className="mb-4 p-3 bg-primary/5 border border-primary/10 rounded-lg">
+                                  <div className="flex items-center justify-between gap-3">
+                                    <div>
+                                      {post.price && (
+                                        <p className="text-lg font-bold text-primary">{post.price}</p>
+                                      )}
+                                      <p className="text-xs text-muted-foreground">
+                                        {post.postType === "trade" && "Open to trade offers"}
+                                        {post.postType === "sell" && "Available for purchase"}
+                                        {post.postType === "buy" && "Looking to buy"}
+                                      </p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      {post.postType === "trade" && (
+                                        <Link to="/trades">
+                                          <Button size="sm" className="gap-2">
+                                            <ArrowLeftRight className="h-4 w-4" />
+                                            Make Offer
+                                          </Button>
+                                        </Link>
+                                      )}
+                                      {post.postType === "sell" && (
+                                        <Link to="/orders">
+                                          <Button size="sm" className="gap-2">
+                                            <ShoppingCart className="h-4 w-4" />
+                                            Purchase
+                                          </Button>
+                                        </Link>
+                                      )}
+                                      {post.postType === "buy" && (
+                                        <Link to="/trades">
+                                          <Button size="sm" className="gap-2">
+                                            <Send className="h-4 w-4" />
+                                            Submit Offer
+                                          </Button>
+                                        </Link>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
                               <div className="flex items-center gap-4 mb-4">
                                 <Button variant="ghost" size="sm" className="gap-2">
                                   <ThumbsUp className="h-4 w-4" />
@@ -448,6 +576,51 @@ const GuildDetail = () => {
                                 </div>
                               </div>
                               <p className="text-sm mb-4 mt-2">{post.content}</p>
+                              
+                              {/* Quick Action Buttons */}
+                              {post.postType !== "discussion" && (
+                                <div className="mb-4 p-3 bg-primary/5 border border-primary/10 rounded-lg">
+                                  <div className="flex items-center justify-between gap-3">
+                                    <div>
+                                      {post.price && (
+                                        <p className="text-lg font-bold text-primary">{post.price}</p>
+                                      )}
+                                      <p className="text-xs text-muted-foreground">
+                                        {post.postType === "trade" && "Open to trade offers"}
+                                        {post.postType === "sell" && "Available for purchase"}
+                                        {post.postType === "buy" && "Looking to buy"}
+                                      </p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      {post.postType === "trade" && (
+                                        <Link to="/trades">
+                                          <Button size="sm" className="gap-2">
+                                            <ArrowLeftRight className="h-4 w-4" />
+                                            Make Offer
+                                          </Button>
+                                        </Link>
+                                      )}
+                                      {post.postType === "sell" && (
+                                        <Link to="/orders">
+                                          <Button size="sm" className="gap-2">
+                                            <ShoppingCart className="h-4 w-4" />
+                                            Purchase
+                                          </Button>
+                                        </Link>
+                                      )}
+                                      {post.postType === "buy" && (
+                                        <Link to="/trades">
+                                          <Button size="sm" className="gap-2">
+                                            <Send className="h-4 w-4" />
+                                            Submit Offer
+                                          </Button>
+                                        </Link>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
                               <div className="flex items-center gap-4 mb-4">
                                 <Button variant="ghost" size="sm" className="gap-2">
                                   <ThumbsUp className="h-4 w-4" />
