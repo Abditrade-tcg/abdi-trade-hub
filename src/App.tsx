@@ -32,6 +32,14 @@ import Contact from "./pages/Contact";
 import FAQ from "./pages/FAQ";
 import Fees from "./pages/Fees";
 import TrustSafetyPage from "./pages/TrustSafetyPage";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import CommunityGuidelines from "./pages/CommunityGuidelines";
+import CookiePolicy from "./pages/CookiePolicy";
+import ReturnPolicy from "./pages/ReturnPolicy";
+import DMCA from "./pages/DMCA";
+import SellerAgreement from "./pages/SellerAgreement";
+import Accessibility from "./pages/Accessibility";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +80,16 @@ const App = () => (
             <Route path="/faq" element={<FAQ />} />
             <Route path="/fees" element={<Fees />} />
             <Route path="/trust-safety" element={<TrustSafetyPage />} />
+            <Route path="/community-guidelines" element={<CommunityGuidelines />} />
+            
+            {/* Legal Pages */}
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/cookies" element={<CookiePolicy />} />
+            <Route path="/returns" element={<ReturnPolicy />} />
+            <Route path="/dmca" element={<DMCA />} />
+            <Route path="/seller-agreement" element={<SellerAgreement />} />
+            <Route path="/accessibility" element={<Accessibility />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
