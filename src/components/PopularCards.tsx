@@ -4,32 +4,60 @@ import { Heart, TrendingUp } from "lucide-react";
 
 const cards = [
   {
-    name: "Charizard VMAX",
-    game: "Pokemon",
-    price: "$450.00",
-    trend: "+12%",
-    image: "https://images.unsplash.com/photo-1606663889134-b1dedb5ed8b7?w=500&q=80",
+    name: "Monkey D. Luffy",
+    game: "One Piece",
+    price: "$85.00",
+    trend: "+15%",
+    image: "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=500&q=80",
   },
   {
-    name: "Black Lotus",
-    game: "Magic: The Gathering",
-    price: "$12,500.00",
-    trend: "+8%",
+    name: "Son Goku Ultra Instinct",
+    game: "Dragon Ball",
+    price: "$120.00",
+    trend: "+22%",
     image: "https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?w=500&q=80",
   },
   {
-    name: "Blue-Eyes White Dragon",
-    game: "Yu-Gi-Oh!",
-    price: "$320.00",
-    trend: "+5%",
+    name: "Omnimon Alter-S",
+    game: "Digimon",
+    price: "$95.00",
+    trend: "+8%",
+    image: "https://images.unsplash.com/photo-1606663889134-b1dedb5ed8b7?w=500&q=80",
+  },
+  {
+    name: "Gundam Aerial",
+    game: "Gundam",
+    price: "$65.00",
+    trend: "+12%",
     image: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=500&q=80",
   },
   {
-    name: "Pikachu Illustrator",
-    game: "Pokemon",
-    price: "$5,275.00",
-    trend: "+15%",
+    name: "Darth Vader",
+    game: "Star Wars",
+    price: "$145.00",
+    trend: "+18%",
+    image: "https://images.unsplash.com/photo-1601814933824-fd0b574dd592?w=500&q=80",
+  },
+  {
+    name: "Yasuo Secret Rare",
+    game: "Riftbound (League of Legends)",
+    price: "$175.00",
+    trend: "+25%",
     image: "https://images.unsplash.com/photo-1613771404721-1f92d799e49f?w=500&q=80",
+  },
+  {
+    name: "Trafalgar Law",
+    game: "One Piece",
+    price: "$78.00",
+    trend: "+10%",
+    image: "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=500&q=80",
+  },
+  {
+    name: "Agumon Bond",
+    game: "Digimon",
+    price: "$55.00",
+    trend: "+6%",
+    image: "https://images.unsplash.com/photo-1606663889134-b1dedb5ed8b7?w=500&q=80",
   },
 ];
 
@@ -42,13 +70,13 @@ const PopularCards = () => {
       <div className="container relative mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl sm:text-5xl font-bold mb-4">
-            Trending{" "}
+            Featured{" "}
             <span className="bg-gradient-to-r from-[hsl(45,93%,47%)] to-[hsl(45,93%,55%)] bg-clip-text text-transparent">
-              Cards
+              Trading Cards
             </span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Discover the most sought-after cards in the marketplace
+            Explore cards from One Piece, Dragon Ball, Digimon, Union Arena, Gundam, Star Wars, and Riftbound
           </p>
         </div>
 

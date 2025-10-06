@@ -20,19 +20,18 @@ const Hero = () => {
           <div className="text-center lg:text-left animate-fade-in">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full mb-6">
               <Shield className="w-4 h-4 text-primary" />
-              <span className="text-sm text-muted-foreground">Secure Trading Platform</span>
+              <span className="text-sm text-muted-foreground">Discover New Trading Card Games</span>
             </div>
             
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-              Trade Your{" "}
+              Explore Cards from{" "}
               <span className="bg-gradient-to-r from-[hsl(221,83%,32%)] to-[hsl(221,83%,50%)] bg-clip-text text-transparent">
-                Favorite Cards
-              </span>{" "}
-              Securely
+                Top TCG Games
+              </span>
             </h1>
             
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto lg:mx-0">
-              Join the ultimate marketplace for trading card enthusiasts. Buy, sell, and trade with confidence while connecting with a vibrant community.
+              Browse and collect from One Piece, Dragon Ball, Digimon, Union Arena, Gundam, Star Wars, and Riftbound (League of Legends). Buy, sell, and trade with confidence.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
