@@ -157,7 +157,7 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <div className="p-6 max-w-7xl mx-auto">
+        <div className="p-6">
           {/* Hero Stats Card */}
           <Card className="mb-6 bg-gradient-to-br from-primary/10 via-accent/5 to-transparent border-primary/20">
             <CardHeader>
@@ -203,8 +203,8 @@ const Dashboard = () => {
           </Card>
 
           {/* Feed Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr,380px] gap-6">
+            <div className="space-y-6">
               {/* Feed Tabs */}
               <Card>
                 <CardContent className="p-0">
