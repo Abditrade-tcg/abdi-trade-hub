@@ -10,13 +10,27 @@ import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, SlidersHorizontal, Star, TrendingUp, Package } from "lucide-react";
+import { Search, SlidersHorizontal, Star, ShoppingCart } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useCart } from "@/contexts/CartContext";
+import { toast } from "@/hooks/use-toast";
 
 const Browse = () => {
+  const { addToCart } = useCart();
   const [searchQuery, setSearchQuery] = useState("");
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [sortBy, setSortBy] = useState("newest");
+
+  const handleAddToCart = (listing: any) => {
+    addToCart({
+      id: listing.id,
+      name: listing.name,
+      price: listing.price,
+      image: listing.image,
+      seller: listing.seller,
+      condition: listing.condition,
+    });
+  };
 
   const games = ["Pokemon", "Magic: The Gathering", "Yu-Gi-Oh!", "One Piece", "Digimon"];
   const conditions = ["Mint", "Near Mint", "Lightly Played", "Moderately Played", "Heavily Played"];
@@ -274,13 +288,25 @@ const Browse = () => {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center justify-between text-sm mb-3">
                         <div className="flex items-center gap-1">
                           <Star className="h-3 w-3 text-accent fill-accent" />
                           <span className="font-medium">{listing.sellerRating}</span>
                         </div>
                         <p className="text-muted-foreground truncate">{listing.seller}</p>
                       </div>
+
+                      <Button 
+                        className="w-full gap-2" 
+                        size="sm"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleAddToCart(listing);
+                        }}
+                      >
+                        <ShoppingCart className="h-4 w-4" />
+                        Add to Cart
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>

@@ -1,12 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Menu, Search } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Menu, Search, ShoppingCart } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import logo from "@/assets/abditrade-logo.png";
 import { ThemeToggle } from "./ThemeToggle";
+import { useCart } from "@/contexts/CartContext";
 
 const Navbar = () => {
+  const { cartCount } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -35,6 +38,16 @@ const Navbar = () => {
           {/* Right Actions */}
           <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
+            <Button variant="ghost" size="icon" className="relative" asChild>
+              <Link to="/cart">
+                <ShoppingCart className="h-5 w-5" />
+                {cartCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                    {cartCount}
+                  </Badge>
+                )}
+              </Link>
+            </Button>
             <Button variant="ghost" asChild>
               <Link to="/auth">Sign In</Link>
             </Button>
