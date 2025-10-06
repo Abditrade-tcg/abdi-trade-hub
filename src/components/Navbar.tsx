@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Menu, Search } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import logo from "@/assets/abditrade-logo.png";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -34,8 +35,12 @@ const Navbar = () => {
           {/* Right Actions */}
           <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
-            <Button variant="ghost">Sign In</Button>
-            <Button variant="accent">Get Started</Button>
+            <Button variant="ghost" asChild>
+              <Link to="/auth">Sign In</Link>
+            </Button>
+            <Button variant="accent" asChild>
+              <Link to="/auth">Get Started</Link>
+            </Button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -62,8 +67,12 @@ const Navbar = () => {
               </div>
               <div className="flex gap-2 pt-2 border-t border-border items-center justify-between">
                 <div className="flex gap-2 flex-1">
-                  <Button variant="ghost" className="flex-1">Sign In</Button>
-                  <Button variant="accent" className="flex-1">Get Started</Button>
+                  <Button variant="ghost" className="flex-1" asChild>
+                    <Link to="/auth">Sign In</Link>
+                  </Button>
+                  <Button variant="accent" className="flex-1" asChild>
+                    <Link to="/auth">Get Started</Link>
+                  </Button>
                 </div>
                 <ThemeToggle />
               </div>
