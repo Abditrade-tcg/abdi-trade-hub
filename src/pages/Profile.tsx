@@ -343,14 +343,100 @@ const Profile = () => {
                     ))}
                   </div>
 
+                  {/* Transfer Options */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-green-500/20">
+                      <CardHeader>
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Wallet className="h-4 w-4 text-green-500" />
+                          Standard Transfer
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Processing Time</span>
+                            <span className="font-medium">1-3 Business Days</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Fee</span>
+                            <span className="font-medium text-green-500">Free</span>
+                          </div>
+                        </div>
+                        <Separator />
+                        <div className="space-y-2">
+                          <Label htmlFor="standardAmount">Amount to Transfer</Label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                            <Input
+                              id="standardAmount"
+                              type="number"
+                              placeholder="0.00"
+                              className="pl-7"
+                              step="0.01"
+                              min="0"
+                            />
+                          </div>
+                        </div>
+                        <Button variant="outline" className="w-full gap-2 hover:border-green-500/50">
+                          <ArrowLeftRight className="h-4 w-4" />
+                          Initiate Standard Transfer
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="shadow-lg hover:shadow-xl transition-all duration-300 border-accent/20">
+                      <CardHeader>
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4 text-accent" />
+                          Express Transfer
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Processing Time</span>
+                            <span className="font-medium">Within 30 Minutes</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Fee</span>
+                            <span className="font-medium text-accent">2% of Amount</span>
+                          </div>
+                        </div>
+                        <Separator />
+                        <div className="space-y-2">
+                          <Label htmlFor="expressAmount">Amount to Transfer</Label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                            <Input
+                              id="expressAmount"
+                              type="number"
+                              placeholder="0.00"
+                              className="pl-7"
+                              step="0.01"
+                              min="0"
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Fee will be calculated at checkout
+                          </p>
+                        </div>
+                        <Button variant="accent" className="w-full gap-2 shadow-lg">
+                          <TrendingUp className="h-4 w-4" />
+                          Initiate Express Transfer
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
+
                   <Card className="shadow-lg hover:shadow-xl transition-all duration-300">
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <CardTitle className="flex items-center gap-2">
                           <Wallet className="h-5 w-5" />
-                          Wallet Details
+                          Transaction History
                         </CardTitle>
-                        <Button variant="accent" className="gap-2">
+                        <Button variant="outline" className="gap-2 hover:border-primary/50">
                           <Plus className="h-4 w-4" />
                           Add Funds
                         </Button>
