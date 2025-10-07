@@ -6,7 +6,9 @@ import { Separator } from "@/components/ui/separator";
 import { CreditCard, Truck, Package } from "lucide-react";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { isFeatureEnabled } from "@/config/environmentManager";
 
 interface CheckoutModalProps {
   open: boolean;
@@ -21,8 +23,10 @@ interface CheckoutModalProps {
 }
 
 export const CheckoutModal = ({ open, onOpenChange, items, shippingOption = "standard", onConfirm }: CheckoutModalProps) => {
-  const navigate = useNavigate();
+  const router = useRouter();
+  const { data: session } = useSession() || { data: null };
   const [loading, setLoading] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const processingFee = shippingOption === "processing" ? subtotal * 0.04 : 0;
@@ -30,22 +34,66 @@ export const CheckoutModal = ({ open, onOpenChange, items, shippingOption = "sta
   const total = subtotal + processingFee + shipping;
 
   const handleCheckout = async () => {
+    if (!session?.user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to complete your purchase.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
+    setPaymentError('');
     
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    toast({
-      title: "Payment Successful!",
-      description: "Your order has been placed and will be tracked in Orders.",
-    });
-    
-    onConfirm?.();
-    onOpenChange(false);
-    setLoading(false);
-    
-    // Navigate to orders page
-    setTimeout(() => navigate("/orders"), 500);
+    try {
+      if (isFeatureEnabled('enableRealPayments')) {
+        // TODO: Process real payment with Stripe
+        // const paymentIntent = await stripeService.createPaymentIntent({
+        //   amount: Math.round(total * 100), // Convert to cents
+        //   currency: 'usd',
+        //   userId: session.user.email,
+        //   items: items.map(item => ({
+        //     name: item.name,
+        //     price: item.price,
+        //     quantity: item.quantity
+        //   }))
+        // });
+
+        // For now, simulate successful payment
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        toast({
+          title: "Payment Successful! (Stripe Integration Pending)",
+          description: "Your order has been placed and will be tracked in Orders.",
+        });
+      } else {
+        // Simulate payment processing for development
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        toast({
+          title: "Payment Successful! (Demo Mode)",
+          description: "Your order has been placed and will be tracked in Orders.",
+        });
+      }
+      
+      onConfirm?.();
+      onOpenChange(false);
+      
+      // Navigate to orders page
+      setTimeout(() => router.push("/orders"), 500);
+    } catch (error) {
+      console.error('Payment failed:', error);
+      setPaymentError('Payment failed. Please try again.');
+      
+      toast({
+        title: "Payment Failed",
+        description: "There was an error processing your payment. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

@@ -1,56 +1,58 @@
-import { useState } from "react";
-import { BarChart3, TrendingUp, DollarSign, Package, Users, Calendar, Download, Filter } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
+"use client"
 
-const Analytics = () => {
-  const [timeRange, setTimeRange] = useState("30days");
-  const [category, setCategory] = useState("all");
+import { useState } from "react"
+import { BarChart3, TrendingUp, DollarSign, Package, Users, Calendar, Download } from "lucide-react"
+import Navbar from "@/components/navbar"
+import Footer from "@/components/footer"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
+
+export default function Analytics() {
+  const [timeRange, setTimeRange] = useState("30days")
+  const [category, setCategory] = useState("all")
 
   // Mock data
   const revenueData = {
-    total: 45678.50,
+    total: 45678.5,
     change: 12.5,
     trend: "up",
     orders: 234,
-    avgOrderValue: 195.20
-  };
+    avgOrderValue: 195.2,
+  }
 
   const topProducts = [
     { name: "Charizard VMAX - PSA 10", sales: 45, revenue: 20250, growth: 15 },
     { name: "Pikachu VMAX Alt Art - PSA 10", sales: 38, revenue: 15200, growth: 8 },
     { name: "Umbreon VMAX Alt Art - BGS 9.5", sales: 32, revenue: 12800, growth: -5 },
     { name: "Mewtwo V Alt Art - PSA 10", sales: 28, revenue: 8960, growth: 22 },
-    { name: "Rayquaza VMAX - PSA 10", sales: 25, revenue: 7500, growth: 10 }
-  ];
+    { name: "Rayquaza VMAX - PSA 10", sales: 25, revenue: 7500, growth: 10 },
+  ]
 
   const customerMetrics = {
     newCustomers: 89,
     returningCustomers: 145,
     repeatPurchaseRate: 62,
-    avgLifetimeValue: 487.30
-  };
+    avgLifetimeValue: 487.3,
+  }
 
   const inventoryMetrics = {
     totalItems: 1247,
     activeListings: 892,
     soldThisMonth: 234,
-    turnoverRate: 26.2
-  };
+    turnoverRate: 26.2,
+  }
 
   const salesByCategory = [
     { category: "Pokemon", sales: 145, revenue: 28950, percentage: 63 },
     { category: "Magic: The Gathering", sales: 56, revenue: 11200, percentage: 24 },
-    { category: "Yu-Gi-Oh!", sales: 33, revenue: 6528.50, percentage: 13 }
-  ];
+    { category: "Yu-Gi-Oh!", sales: 33, revenue: 6528.5, percentage: 13 },
+  ]
 
   const revenueByMonth = [
     { month: "Jul", revenue: 32400 },
@@ -58,23 +60,23 @@ const Analytics = () => {
     { month: "Sep", revenue: 41500 },
     { month: "Oct", revenue: 39800 },
     { month: "Nov", revenue: 43600 },
-    { month: "Dec", revenue: 45678.50 }
-  ];
+    { month: "Dec", revenue: 45678.5 },
+  ]
 
   const topBuyers = [
-    { name: "John Smith", orders: 12, spent: 2340.50, lastPurchase: "2 days ago" },
-    { name: "Sarah Johnson", orders: 9, spent: 1856.20, lastPurchase: "5 days ago" },
-    { name: "Mike Davis", orders: 8, spent: 1620.00, lastPurchase: "1 week ago" },
-    { name: "Emily Brown", orders: 7, spent: 1432.80, lastPurchase: "3 days ago" },
-    { name: "Chris Wilson", orders: 6, spent: 1245.60, lastPurchase: "4 days ago" }
-  ];
+    { name: "John Smith", orders: 12, spent: 2340.5, lastPurchase: "2 days ago" },
+    { name: "Sarah Johnson", orders: 9, spent: 1856.2, lastPurchase: "5 days ago" },
+    { name: "Mike Davis", orders: 8, spent: 1620.0, lastPurchase: "1 week ago" },
+    { name: "Emily Brown", orders: 7, spent: 1432.8, lastPurchase: "3 days ago" },
+    { name: "Chris Wilson", orders: 6, spent: 1245.6, lastPurchase: "4 days ago" },
+  ]
 
-  const maxRevenue = Math.max(...revenueByMonth.map(m => m.revenue));
+  const maxRevenue = Math.max(...revenueByMonth.map((m) => m.revenue))
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
-      
+
       <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -131,9 +133,7 @@ const Analytics = () => {
                 <Package className="h-4 w-4 text-muted-foreground" />
               </div>
               <p className="text-2xl font-bold mb-1">{revenueData.orders}</p>
-              <p className="text-sm text-muted-foreground">
-                Avg: ${revenueData.avgOrderValue.toFixed(2)}
-              </p>
+              <p className="text-sm text-muted-foreground">Avg: ${revenueData.avgOrderValue.toFixed(2)}</p>
             </CardContent>
           </Card>
 
@@ -144,9 +144,7 @@ const Analytics = () => {
                 <Package className="h-4 w-4 text-muted-foreground" />
               </div>
               <p className="text-2xl font-bold mb-1">{inventoryMetrics.activeListings}</p>
-              <p className="text-sm text-muted-foreground">
-                {inventoryMetrics.turnoverRate}% turnover rate
-              </p>
+              <p className="text-sm text-muted-foreground">{inventoryMetrics.turnoverRate}% turnover rate</p>
             </CardContent>
           </Card>
 
@@ -156,10 +154,10 @@ const Analytics = () => {
                 <p className="text-sm text-muted-foreground">Customers</p>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </div>
-              <p className="text-2xl font-bold mb-1">{customerMetrics.newCustomers + customerMetrics.returningCustomers}</p>
-              <p className="text-sm text-muted-foreground">
-                {customerMetrics.repeatPurchaseRate}% repeat rate
+              <p className="text-2xl font-bold mb-1">
+                {customerMetrics.newCustomers + customerMetrics.returningCustomers}
               </p>
+              <p className="text-sm text-muted-foreground">{customerMetrics.repeatPurchaseRate}% repeat rate</p>
             </CardContent>
           </Card>
         </div>
@@ -265,7 +263,8 @@ const Analytics = () => {
                         <TableCell className="text-right">${product.revenue.toLocaleString()}</TableCell>
                         <TableCell className="text-right">
                           <Badge variant={product.growth >= 0 ? "default" : "destructive"}>
-                            {product.growth >= 0 ? "+" : ""}{product.growth}%
+                            {product.growth >= 0 ? "+" : ""}
+                            {product.growth}%
                           </Badge>
                         </TableCell>
                       </TableRow>
@@ -293,7 +292,9 @@ const Analytics = () => {
                   <div className="p-4 border rounded-lg">
                     <p className="text-sm text-muted-foreground mb-1">Fastest Growing</p>
                     <p className="font-medium">{topProducts.sort((a, b) => b.growth - a.growth)[0].name}</p>
-                    <p className="text-sm text-green-500 mt-2">+{topProducts.sort((a, b) => b.growth - a.growth)[0].growth}% growth</p>
+                    <p className="text-sm text-green-500 mt-2">
+                      +{topProducts.sort((a, b) => b.growth - a.growth)[0].growth}% growth
+                    </p>
                   </div>
                   <div className="p-4 border rounded-lg">
                     <p className="text-sm text-muted-foreground mb-1">Total Products</p>
@@ -311,9 +312,13 @@ const Analytics = () => {
                       <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex-1">
                           <p className="font-medium text-sm">{product.name}</p>
-                          <p className="text-xs text-muted-foreground">Avg price: ${(product.revenue / product.sales).toFixed(2)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Avg price: ${(product.revenue / product.sales).toFixed(2)}
+                          </p>
                         </div>
-                        <Badge variant="outline">Market avg: ${((product.revenue / product.sales) * 0.95).toFixed(2)}</Badge>
+                        <Badge variant="outline">
+                          Market avg: ${((product.revenue / product.sales) * 0.95).toFixed(2)}
+                        </Badge>
                       </div>
                     ))}
                   </div>
@@ -336,14 +341,28 @@ const Analytics = () => {
                       <span className="text-sm">New Customers</span>
                       <span className="font-medium">{customerMetrics.newCustomers}</span>
                     </div>
-                    <Progress value={(customerMetrics.newCustomers / (customerMetrics.newCustomers + customerMetrics.returningCustomers)) * 100} className="h-2" />
+                    <Progress
+                      value={
+                        (customerMetrics.newCustomers /
+                          (customerMetrics.newCustomers + customerMetrics.returningCustomers)) *
+                        100
+                      }
+                      className="h-2"
+                    />
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Returning Customers</span>
                       <span className="font-medium">{customerMetrics.returningCustomers}</span>
                     </div>
-                    <Progress value={(customerMetrics.returningCustomers / (customerMetrics.newCustomers + customerMetrics.returningCustomers)) * 100} className="h-2" />
+                    <Progress
+                      value={
+                        (customerMetrics.returningCustomers /
+                          (customerMetrics.newCustomers + customerMetrics.returningCustomers)) *
+                        100
+                      }
+                      className="h-2"
+                    />
                   </div>
                   <Separator />
                   <div className="flex items-center justify-between">
@@ -364,7 +383,9 @@ const Analytics = () => {
                       <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
                         <div>
                           <p className="font-medium text-sm">{buyer.name}</p>
-                          <p className="text-xs text-muted-foreground">{buyer.orders} orders · Last: {buyer.lastPurchase}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {buyer.orders} orders · Last: {buyer.lastPurchase}
+                          </p>
                         </div>
                         <p className="font-medium">${buyer.spent.toLocaleString()}</p>
                       </div>
@@ -497,7 +518,6 @@ const Analytics = () => {
 
       <Footer />
     </div>
-  );
-};
+  )
+}
 
-export default Analytics;

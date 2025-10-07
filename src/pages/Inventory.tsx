@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -77,7 +77,7 @@ const Inventory = () => {
               </h1>
               <p className="text-muted-foreground">Manage your listings and track sales</p>
             </div>
-            <Link to="/sell">
+            <Link href="/sell">
               <Button className="gap-2">
                 <PlusCircle className="h-4 w-4" />
                 New Listing
@@ -268,7 +268,7 @@ const Inventory = () => {
                     : "Create your first listing to start selling"
                   }
                 </p>
-                <Link to="/sell">
+                <Link href="/sell">
                   <Button className="gap-2">
                     <PlusCircle className="h-4 w-4" />
                     Create Listing
@@ -286,3 +286,4 @@ const Inventory = () => {
 };
 
 export default Inventory;
+

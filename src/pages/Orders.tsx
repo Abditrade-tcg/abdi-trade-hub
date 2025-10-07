@@ -29,7 +29,7 @@ import {
   Info,
 } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import logo from "@/assets/abditrade-logo.png";
 import { useTheme } from "next-themes";
 import {
@@ -83,7 +83,7 @@ const Orders = () => {
       {/* Sidebar */}
       <aside className="w-64 border-r border-border bg-card/50 backdrop-blur-sm flex flex-col shadow-lg">
         <div className="p-6 border-b border-border/50">
-          <Link to="/" className="flex items-center">
+          <Link href="/" className="flex items-center">
             <img src={logo} alt="Abditrade" className="h-12" />
           </Link>
         </div>
@@ -92,7 +92,7 @@ const Orders = () => {
           {navItems.map((item, index) => (
             <Link
               key={item.label}
-              to={item.href}
+              href={item.href}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200 hover:translate-x-1 group animate-fade-in ${
                 item.href === "/orders" ? "bg-primary/10 text-primary" : ""
               }`}
@@ -197,7 +197,7 @@ const Orders = () => {
                     Track your purchases and order history
                   </p>
                 </div>
-                <Link to="/marketplace">
+                <Link href="/marketplace">
                   <Button variant="accent" className="gap-2 hover:scale-105 transition-all shadow-lg hover:shadow-accent/20">
                     <Store className="h-4 w-4" />
                     Browse Marketplace
@@ -271,13 +271,13 @@ const Orders = () => {
                     You haven't made any purchases yet. Browse our marketplace to find amazing cards from verified sellers.
                   </p>
                   <div className="flex gap-3 justify-center mb-8">
-                    <Link to="/marketplace">
+                    <Link href="/marketplace">
                       <Button variant="accent" className="gap-2 hover:scale-105 transition-all shadow-lg hover:shadow-accent/20">
                         <Store className="h-4 w-4" />
                         Browse Marketplace
                       </Button>
                     </Link>
-                    <Link to="/guilds">
+                    <Link href="/guilds">
                       <Button variant="outline" className="gap-2 hover:scale-105 transition-all hover:border-primary/50">
                         <Users className="h-4 w-4" />
                         Join Trading Communities
@@ -403,3 +403,4 @@ const Orders = () => {
 };
 
 export default Orders;
+

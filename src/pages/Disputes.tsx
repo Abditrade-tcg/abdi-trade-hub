@@ -34,7 +34,7 @@ import {
   Shield,
 } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import logo from "@/assets/abditrade-logo.png";
 import { useTheme } from "next-themes";
 import {
@@ -97,7 +97,7 @@ const Disputes = () => {
       {/* Sidebar */}
       <aside className="w-64 border-r border-border bg-card/50 backdrop-blur-sm flex flex-col shadow-lg">
         <div className="p-6 border-b border-border/50">
-          <Link to="/" className="flex items-center">
+          <Link href="/" className="flex items-center">
             <img src={logo} alt="Abditrade" className="h-12" />
           </Link>
         </div>
@@ -106,7 +106,7 @@ const Disputes = () => {
           {navItems.map((item, index) => (
             <Link
               key={item.label}
-              to={item.href}
+              href={item.href}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200 hover:translate-x-1 group animate-fade-in ${
                 item.href === "/disputes" ? "bg-primary/10 text-primary" : ""
               }`}
@@ -480,3 +480,4 @@ const Disputes = () => {
 };
 
 export default Disputes;
+

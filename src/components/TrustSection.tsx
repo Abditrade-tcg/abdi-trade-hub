@@ -1,3 +1,5 @@
+"use client";
+
 import { Shield, Lock, BadgeCheck, HeadphonesIcon } from "lucide-react";
 
 const trustFeatures = [

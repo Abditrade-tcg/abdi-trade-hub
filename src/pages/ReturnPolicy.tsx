@@ -276,3 +276,4 @@ const ReturnPolicy = () => {
 };
 
 export default ReturnPolicy;
+

@@ -1,0 +1,126 @@
+version: 1
+applications:
+  - appRoot: /
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - echo "Installing dependencies..."
+            - npm ci
+            - echo "Environment variables check..."
+            - echo "NODE_ENV=$NODE_ENV"
+            - echo "NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL"
+            - echo "NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL"
+            - echo "NEXT_PUBLIC_AWS_REGION=$NEXT_PUBLIC_AWS_REGION"
+            - echo "NEXT_PUBLIC_COGNITO_USER_POOL_ID=${NEXT_PUBLIC_COGNITO_USER_POOL_ID:+SET}"
+            - echo "NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID=${NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID:+SET}"
+            - echo "STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:+SET}"
+        build:
+          commands:
+            - echo "Building Next.js application..."
+            - npm run build
+            - echo "Build completed successfully"
+        postBuild:
+          commands:
+            - echo "Post-build cleanup..."
+            - echo "Verifying build artifacts..."
+            - ls -la .next/
+            - echo "Build verification complete"
+      artifacts:
+        baseDirectory: .next
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*
+          - .next/cache/**/*
+    backend:
+      phases:
+        preBuild:
+          commands:
+            - echo "Backend pre-build phase"
+            - echo "Setting up AWS credentials..."
+            # AWS credentials will be provided by Amplify environment
+        build:
+          commands:
+            - echo "Backend build phase"
+            - echo "No backend build required for frontend-only deployment"
+        postBuild:
+          commands:
+            - echo "Backend post-build phase"
+            - echo "Backend setup complete"
+    environmentVariables:
+      # Public environment variables (safe to expose)
+      NODE_ENV: production
+      NEXT_PUBLIC_APP_URL: https://abditrade.com
+      NEXT_PUBLIC_API_URL: https://api.abditrade.com
+      NEXT_PUBLIC_AWS_REGION: us-east-2
+      # These will be set in Amplify Console environment variables:
+      # NEXT_PUBLIC_COGNITO_USER_POOL_ID
+      # NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID  
+      # STRIPE_PUBLISHABLE_KEY
+      # STRIPE_SECRET_KEY (for API routes)
+      # AWS_ACCESS_KEY_ID (for S3/OpenSearch access)
+      # AWS_SECRET_ACCESS_KEY
+      # DATABASE_URL
+      # REDIS_URL
+      # OPENSEARCH_ENDPOINT
+      # JWT_SECRET
+      # NEXTAUTH_SECRET
+      # NEXTAUTH_URL
+    customHeaders:
+      - pattern: '**/*'
+        headers:
+          - key: 'Strict-Transport-Security'
+            value: 'max-age=31536000; includeSubDomains'
+          - key: 'X-Frame-Options'
+            value: 'DENY'
+          - key: 'X-Content-Type-Options'
+            value: 'nosniff'
+          - key: 'Referrer-Policy'
+            value: 'strict-origin-when-cross-origin'
+          - key: 'Content-Security-Policy'
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://*.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://api.stripe.com https://*.stripe.com https://api.abditrade.com https://db.ygoprodeck.com https://api.pokemontcg.io https://api.scryfall.com https://apitcg.com https://*.amazonaws.com; frame-src https://js.stripe.com https://hooks.stripe.com;"
+      - pattern: '/api/**'
+        headers:
+          - key: 'Cache-Control'
+            value: 'no-store, no-cache, must-revalidate'
+      - pattern: '/_next/static/**'
+        headers:
+          - key: 'Cache-Control'
+            value: 'public, max-age=31536000, immutable'
+      - pattern: '/images/**'
+        headers:
+          - key: 'Cache-Control'
+            value: 'public, max-age=86400'
+    rewrites:
+      - source: '/api/<*>'
+        target: '/api/<*>'
+        status: '200'
+      - source: '/<*>'
+        target: '/index.html'
+        status: '404-200'
+    redirects:
+      - source: '/admin'
+        target: '/admin/dashboard'
+        status: '301'
+      - source: '/sell'
+        target: '/onboarding'
+        status: '301'
+    # Branch-specific settings
+    branches:
+      main:
+        environmentVariables:
+          NODE_ENV: production
+          NEXT_PUBLIC_APP_URL: https://abditrade.com
+          NEXT_PUBLIC_API_URL: https://api.abditrade.com
+      develop:
+        environmentVariables:
+          NODE_ENV: staging
+          NEXT_PUBLIC_APP_URL: https://staging.abditrade.com
+          NEXT_PUBLIC_API_URL: https://staging-api.abditrade.com
+      feature/*:
+        environmentVariables:
+          NODE_ENV: development
+          NEXT_PUBLIC_APP_URL: https://$AWS_BRANCH.d1234567890.amplifyapp.com
+          NEXT_PUBLIC_API_URL: https://dev-api.abditrade.com

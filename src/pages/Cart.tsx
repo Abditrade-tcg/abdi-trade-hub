@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,8 +14,29 @@ import { ShoppingBag, Trash2, Plus, Minus, ArrowLeft } from "lucide-react";
 import { CheckoutModal } from "@/components/modals";
 
 const Cart = () => {
+  const { data: session, status } = useSession() || { data: null, status: 'loading' };
+  const router = useRouter();
   const { items, removeFromCart, updateQuantity, cartTotal } = useCart();
   const [showCheckout, setShowCheckout] = useState(false);
+
+  // Redirect to signin if not authenticated
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth?callbackUrl=/cart');
+    }
+  }, [status, router]);
+
+  // Show loading while checking authentication
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading cart...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleCheckout = () => {
     setShowCheckout(true);
@@ -26,7 +49,7 @@ const Cart = () => {
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="mb-8">
-            <Link to="/browse">
+            <Link href="/marketplace">
               <Button variant="ghost" className="gap-2 mb-4">
                 <ArrowLeft className="h-4 w-4" />
                 Continue Shopping
@@ -48,7 +71,7 @@ const Cart = () => {
               <p className="text-muted-foreground mb-6">
                 Start adding cards to your cart to see them here
               </p>
-              <Link to="/browse">
+              <Link href="/marketplace">
                 <Button variant="accent">Browse Marketplace</Button>
               </Link>
             </Card>
@@ -152,7 +175,7 @@ const Cart = () => {
                       Proceed to Checkout
                     </Button>
                     
-                    <Link to="/browse">
+                    <Link href="/marketplace">
                       <Button variant="outline" className="w-full">
                         Continue Shopping
                       </Button>
@@ -182,3 +205,4 @@ const Cart = () => {
 };
 
 export default Cart;
+

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -293,17 +293,17 @@ const Sell = () => {
                   <CardTitle className="text-base">Quick Links</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <Link to="/inventory">
+                  <Link href="/inventory">
                     <Button variant="ghost" className="w-full justify-start" size="sm">
                       View My Inventory
                     </Button>
                   </Link>
-                  <Link to="/seller-agreement">
+                  <Link href="/seller-agreement">
                     <Button variant="ghost" className="w-full justify-start" size="sm">
                       Seller Agreement
                     </Button>
                   </Link>
-                  <Link to="/fees">
+                  <Link href="/fees">
                     <Button variant="ghost" className="w-full justify-start" size="sm">
                       Fee Structure
                     </Button>
@@ -321,3 +321,4 @@ const Sell = () => {
 };
 
 export default Sell;
+

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -155,7 +155,7 @@ const HowItWorksPage = () => {
           </div>
 
           <div className="text-center mt-8">
-            <Link to="/browse">
+            <Link href="/browse">
               <Button size="lg" className="gap-2">
                 <Search className="h-5 w-5" />
                 Start Shopping
@@ -192,7 +192,7 @@ const HowItWorksPage = () => {
             </div>
 
             <div className="text-center mt-8">
-              <Link to="/sell/onboarding">
+              <Link href="/sell/onboarding">
                 <Button size="lg" variant="accent" className="gap-2">
                   <Upload className="h-5 w-5" />
                   Start Selling
@@ -229,7 +229,7 @@ const HowItWorksPage = () => {
           </div>
 
           <div className="text-center mt-8">
-            <Link to="/guilds">
+            <Link href="/guilds">
               <Button size="lg" className="gap-2">
                 <Users className="h-5 w-5" />
                 Join Trading Communities
@@ -274,12 +274,12 @@ const HowItWorksPage = () => {
                 Join thousands of collectors buying, selling, and trading on the most trusted platform for trading cards.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/auth">
+                <Link href="/auth">
                   <Button size="lg" className="gap-2">
                     Create Free Account
                   </Button>
                 </Link>
-                <Link to="/browse">
+                <Link href="/browse">
                   <Button size="lg" variant="outline" className="gap-2">
                     Browse Marketplace
                   </Button>
@@ -296,3 +296,4 @@ const HowItWorksPage = () => {
 };
 
 export default HowItWorksPage;
+

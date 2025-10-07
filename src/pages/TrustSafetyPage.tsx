@@ -14,7 +14,7 @@ import {
   Clock,
   Scale
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 const TrustSafetyPage = () => {
   const protections = [
@@ -197,7 +197,7 @@ const TrustSafetyPage = () => {
                   <p className="text-muted-foreground mb-6">
                     See something suspicious? Report it immediately. Our Trust & Safety team investigates all reports within 24 hours.
                   </p>
-                  <Link to="/contact">
+                  <Link href="/contact">
                     <Button variant="destructive" className="gap-2">
                       <AlertTriangle className="h-4 w-4" />
                       Report a Problem
@@ -328,13 +328,13 @@ const TrustSafetyPage = () => {
                 Our team is here to help. Contact us anytime for safety concerns or questions.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/contact">
+                <Link href="/contact">
                   <Button size="lg" className="gap-2">
                     <MessageSquare className="h-5 w-5" />
                     Contact Support
                   </Button>
                 </Link>
-                <Link to="/faq">
+                <Link href="/faq">
                   <Button size="lg" variant="outline">View FAQs</Button>
                 </Link>
               </div>
@@ -349,3 +349,4 @@ const TrustSafetyPage = () => {
 };
 
 export default TrustSafetyPage;
+

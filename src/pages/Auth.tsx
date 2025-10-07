@@ -1,32 +1,126 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EmailVerification } from "@/components/auth/EmailVerification";
+import { authService } from "@/services/authService";
+import { userManagementService } from "@/services/userManagementService";
+import { toast } from "@/hooks/use-toast";
 
 const Auth = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  
+  // Sign In State
   const [signInEmail, setSignInEmail] = useState("");
   const [signInPassword, setSignInPassword] = useState("");
+  
+  // Sign Up State
   const [signUpFirstName, setSignUpFirstName] = useState("");
   const [signUpLastName, setSignUpLastName] = useState("");
   const [signUpEmail, setSignUpEmail] = useState("");
   const [signUpPassword, setSignUpPassword] = useState("");
+  
+  // Email Verification State
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState("");
 
-  const handleSignIn = (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Add actual authentication logic
-    navigate("/dashboard");
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const result = await authService.signIn(signInEmail, signInPassword);
+      
+      if (result.user) {
+        toast({
+          title: "Welcome back!",
+          description: "You have been successfully signed in.",
+        });
+        router.push("/dashboard");
+      }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Sign in failed. Please try again.';
+      setError(errorMessage);
+      toast({
+        title: "Sign in failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSignUp = (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Add actual authentication logic
-    navigate("/dashboard");
+    setIsLoading(true);
+    setError("");
+
+    try {
+      // All users need email verification, company emails get special roles
+      const isCompanyEmail = userManagementService.isCompanyEmail(signUpEmail);
+      
+      const result = await authService.signUp(
+        signUpEmail, 
+        signUpPassword, 
+        {
+          firstName: signUpFirstName,
+          lastName: signUpLastName,
+          userType: isCompanyEmail ? 'TCG Store' : 'Individual'
+        }
+      );
+      
+      // ALL users need email verification, regardless of email domain
+      
+      if (result.needsVerification) {
+        setPendingEmail(signUpEmail);
+        setShowEmailVerification(true);
+        toast({
+          title: "Check your email!",
+          description: "We've sent you a verification code to complete your registration.",
+        });
+      } else {
+        toast({
+          title: "Account created!",
+          description: "Your account has been successfully created.",
+        });
+        router.push("/dashboard");
+      }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Sign up failed. Please try again.';
+      setError(errorMessage);
+      toast({
+        title: "Sign up failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerificationComplete = () => {
+    setShowEmailVerification(false);
+    toast({
+      title: "Email verified!",
+      description: "Your account is now active. Welcome to Abditrade!",
+    });
+    router.push("/dashboard");
+  };
+
+  const handleBackToSignUp = () => {
+    setShowEmailVerification(false);
+    setPendingEmail("");
   };
 
   const passwordRequirements = [
@@ -37,11 +131,35 @@ const Auth = () => {
     "At least one special character (!@#$%^&*)",
   ];
 
+  // Show email verification if needed
+  if (showEmailVerification) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-secondary/20">
+        <div className="container mx-auto px-4 py-8">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Home
+          </Link>
+          <div className="max-w-md mx-auto">
+            <EmailVerification
+              email={pendingEmail}
+              onVerificationComplete={handleVerificationComplete}
+              onBackToSignUp={handleBackToSignUp}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-secondary/20">
       <div className="container mx-auto px-4 py-8">
         <Link
-          to="/"
+          href="/"
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -65,6 +183,11 @@ const Auth = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {error && (
+                    <Alert className="mb-4" variant="destructive">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
                   <form onSubmit={handleSignIn} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="signin-email">Email</Label>
@@ -109,17 +232,18 @@ const Auth = () => {
                       type="submit"
                       variant="accent"
                       className="w-full h-12 text-base"
+                      disabled={isLoading}
                     >
-                      Sign in
+                      {isLoading ? "Signing in..." : "Sign in"}
                     </Button>
 
                     <p className="text-xs text-center text-muted-foreground pt-2">
                       By signing in, you agree to our{" "}
-                      <Link to="/terms" className="text-primary hover:underline">
+                      <Link href="/terms" className="text-primary hover:underline">
                         Terms of Service
                       </Link>{" "}
                       and{" "}
-                      <Link to="/privacy" className="text-primary hover:underline">
+                      <Link href="/privacy" className="text-primary hover:underline">
                         Privacy Policy
                       </Link>
                     </p>
@@ -138,6 +262,11 @@ const Auth = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {error && (
+                    <Alert className="mb-4" variant="destructive">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
                   <form onSubmit={handleSignUp} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
@@ -217,17 +346,18 @@ const Auth = () => {
                       type="submit"
                       variant="accent"
                       className="w-full h-12 text-base"
+                      disabled={isLoading}
                     >
-                      Create Account
+                      {isLoading ? "Creating Account..." : "Create Account"}
                     </Button>
 
                     <p className="text-xs text-center text-muted-foreground pt-2">
                       By creating an account, you agree to our{" "}
-                      <Link to="/terms" className="text-primary hover:underline">
+                      <Link href="/terms" className="text-primary hover:underline">
                         Terms of Service
                       </Link>{" "}
                       and{" "}
-                      <Link to="/privacy" className="text-primary hover:underline">
+                      <Link href="/privacy" className="text-primary hover:underline">
                         Privacy Policy
                       </Link>
                     </p>
@@ -243,3 +373,4 @@ const Auth = () => {
 };
 
 export default Auth;
+

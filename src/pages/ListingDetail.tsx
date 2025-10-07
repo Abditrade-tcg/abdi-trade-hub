@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +29,8 @@ import { CheckoutModal } from "@/components/modals/CheckoutModal";
 import { TradeModal } from "@/components/modals/TradeModal";
 
 const ListingDetail = () => {
-  const { id } = useParams();
+  const router = useRouter();
+  const { id } = router.query;
   const [showCardDetail, setShowCardDetail] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showTrade, setShowTrade] = useState(false);
@@ -83,7 +85,7 @@ const ListingDetail = () => {
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4">
           {/* Back Button */}
-          <Link to="/browse">
+          <Link href="/browse">
             <Button variant="ghost" className="mb-6 gap-2">
               <ArrowLeft className="h-4 w-4" />
               Back to Browse
@@ -247,7 +249,7 @@ const ListingDetail = () => {
                         <p className="text-sm text-muted-foreground">{listing.seller.handle}</p>
                       </div>
                     </div>
-                    <Link to={`/s/${listing.seller.handle}`}>
+                    <Link href={`/s/${listing.seller.handle}`}>
                       <Button variant="outline" size="sm">View Store</Button>
                     </Link>
                   </div>
@@ -448,3 +450,4 @@ const ListingDetail = () => {
 };
 
 export default ListingDetail;
+

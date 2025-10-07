@@ -39,15 +39,27 @@ import {
   Clock,
   AlertCircle,
 } from "lucide-react";
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import logo from "@/assets/abditrade-logo.png";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { backendAPIService } from "@/services/backendAPIService";
+import { isFeatureEnabled } from "@/config/environmentManager";
 
 const Profile = () => {
+  const { data: session, status } = useSession() || { data: null, status: 'loading' };
+  const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [isEditing, setIsEditing] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
+  const [walletData, setWalletData] = useState({
+    availableBalance: 0,
+    pendingBalance: 0,
+    totalEarned: 0
+  });
+  const [loading, setLoading] = useState(true);
 
   const navItems = [
     { icon: Home, label: "Home", href: "/dashboard" },
@@ -63,10 +75,75 @@ const Profile = () => {
   ];
 
   const walletStats = [
-    { label: "Available Balance", value: "$0.00", icon: Wallet, color: "text-green-500" },
-    { label: "Pending", value: "$0.00", icon: Clock, color: "text-accent" },
-    { label: "Total Earned", value: "$0.00", icon: TrendingUp, color: "text-primary" },
+    { label: "Available Balance", value: `$${walletData.availableBalance.toFixed(2)}`, icon: Wallet, color: "text-green-500" },
+    { label: "Pending", value: `$${walletData.pendingBalance.toFixed(2)}`, icon: Clock, color: "text-accent" },
+    { label: "Total Earned", value: `$${walletData.totalEarned.toFixed(2)}`, icon: TrendingUp, color: "text-primary" },
   ];
+
+  // Redirect to signin if not authenticated
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth?callbackUrl=/profile');
+    }
+  }, [status, router]);
+
+  // Load user profile data
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (status === 'authenticated' && session) {
+        try {
+          setLoading(true);
+          
+          if (isFeatureEnabled('enableBackendAPI')) {
+            // Load user profile from backend
+            const profile = await backendAPIService.getUserProfile(session.user.id);
+            setUserProfile(profile);
+            
+            // Load wallet data (mock for now)
+            setWalletData({
+              availableBalance: Math.random() * 1000,
+              pendingBalance: Math.random() * 200,
+              totalEarned: Math.random() * 5000
+            });
+          } else {
+            // Use session data as fallback
+            setUserProfile({
+              name: session.user.name,
+              email: session.user.email,
+              image: session.user.image,
+              joinDate: new Date().toISOString(),
+              verified: false,
+              rating: 0,
+              totalTrades: 0
+            });
+          }
+        } catch (error) {
+          console.error('Error loading user profile:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadUserProfile();
+  }, [status, session]);
+
+  // Handle sign out
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: '/' });
+  };
+
+  // Show loading while checking authentication
+  if (status === 'loading' || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   const communityRules = [
     "Be respectful to all traders",
@@ -80,8 +157,8 @@ const Profile = () => {
       {/* Sidebar */}
       <aside className="w-64 border-r border-border bg-card/50 backdrop-blur-sm flex flex-col shadow-lg">
         <div className="p-6 border-b border-border/50">
-          <Link to="/" className="flex items-center">
-            <img src={logo} alt="Abditrade" className="h-12" />
+          <Link href="/" className="flex items-center">
+            <div className="text-2xl font-bold text-primary">Abditrade</div>
           </Link>
         </div>
 
@@ -89,7 +166,7 @@ const Profile = () => {
           {navItems.map((item, index) => (
             <Link
               key={item.label}
-              to={item.href}
+              href={item.href}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200 hover:translate-x-1 group animate-fade-in ${
                 item.href === "/profile" ? "bg-primary/10 text-primary" : ""
               }`}
@@ -105,11 +182,13 @@ const Profile = () => {
           <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 hover:shadow-lg transition-all duration-300 cursor-pointer group">
             <Avatar className="ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all">
               <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-semibold">
-                M
+                {session?.user?.name?.[0]?.toUpperCase() || session?.user?.email?.[0]?.toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">marquise.will...</p>
+              <p className="text-sm font-medium truncate">
+                {session?.user?.name || session?.user?.email || 'Anonymous User'}
+              </p>
               <div className="flex items-center gap-1">
                 <div className="h-2 w-2 rounded-full bg-green-500" />
                 <span className="text-xs text-muted-foreground">Online</span>
@@ -174,7 +253,13 @@ const Profile = () => {
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-1 right-1 h-2 w-2 bg-accent rounded-full animate-pulse" />
               </Button>
-              <Button variant="default" className="hover:shadow-lg transition-all">Sign Out</Button>
+              <Button 
+                variant="default" 
+                className="hover:shadow-lg transition-all"
+                onClick={handleSignOut}
+              >
+                Sign Out
+              </Button>
             </div>
           </div>
         </header>
@@ -188,19 +273,26 @@ const Profile = () => {
                 <div className="flex items-center gap-6">
                   <Avatar className="h-24 w-24 ring-4 ring-primary/20">
                     <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-semibold text-3xl">
-                      M
+                      {session?.user?.name?.[0]?.toUpperCase() || session?.user?.email?.[0]?.toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h2 className="text-2xl font-bold mb-1">marquise.will...</h2>
-                    <p className="text-muted-foreground mb-3">Member since 2024</p>
+                    <h2 className="text-2xl font-bold mb-1">
+                      {session?.user?.name || session?.user?.email || 'Anonymous User'}
+                    </h2>
+                    <p className="text-muted-foreground mb-3">
+                      Member since {userProfile?.joinDate ? new Date(userProfile.joinDate).getFullYear() : new Date().getFullYear()}
+                    </p>
                     <div className="flex gap-2">
                       <Badge variant="secondary" className="gap-1">
                         <Shield className="h-3 w-3" />
-                        Verified User
+                        {userProfile?.verified ? 'Verified User' : 'Unverified'}
                       </Badge>
                       <Badge variant="outline" className="gap-1">
-                        Rep: 0%
+                        Rep: {userProfile?.rating || 0}%
+                      </Badge>
+                      <Badge variant="outline" className="gap-1">
+                        Trades: {userProfile?.totalTrades || 0}
                       </Badge>
                     </div>
                   </div>
@@ -655,3 +747,4 @@ const Profile = () => {
 };
 
 export default Profile;
+

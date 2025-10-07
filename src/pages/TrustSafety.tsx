@@ -14,7 +14,7 @@ import {
   ArrowUpCircle,
   UserX,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -43,7 +43,7 @@ const TrustSafety = () => {
             </h1>
             <p className="text-muted-foreground mt-1">Moderation, disputes, and safety management</p>
           </div>
-          <Link to="/admin">
+          <Link href="/admin">
             <Button variant="outline">Back to Admin</Button>
           </Link>
         </div>
@@ -247,3 +247,4 @@ const TrustSafety = () => {
 };
 
 export default TrustSafety;
+

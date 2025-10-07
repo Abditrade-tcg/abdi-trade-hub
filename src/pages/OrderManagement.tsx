@@ -12,7 +12,7 @@ import {
   Image as ImageIcon,
   FileText,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -51,7 +51,7 @@ const OrderManagement = () => {
             </h1>
             <p className="text-muted-foreground mt-1">Verification requests and order tracking</p>
           </div>
-          <Link to="/admin">
+          <Link href="/admin">
             <Button variant="outline">Back to Admin</Button>
           </Link>
         </div>
@@ -296,3 +296,4 @@ const OrderManagement = () => {
 };
 
 export default OrderManagement;
+

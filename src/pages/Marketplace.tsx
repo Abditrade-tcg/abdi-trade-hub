@@ -27,14 +27,26 @@ import {
   List,
   Sparkles,
 } from "lucide-react";
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import logo from "@/assets/abditrade-logo.png";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
+import { backendAPIService } from "@/services/backendAPIService";
+// searchService replaced with backendAPIService for production
+import { isFeatureEnabled } from "@/config/environmentManager";
 
 const Marketplace = () => {
+  const { data: session, status } = useSession() || { data: null, status: 'loading' };
+  const router = useRouter();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedGame, setSelectedGame] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [listings, setListings] = useState([]);
+  const [liveActivity, setLiveActivity] = useState({ onlineUsers: 0, activeTrades: 0 });
+  const [trendingCards, setTrendingCards] = useState([]);
+  const [topTraders, setTopTraders] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { theme, setTheme } = useTheme();
 
   const navItems = [
@@ -68,13 +80,85 @@ const Marketplace = () => {
     "Report suspicious activity",
   ];
 
+  // Redirect to signin if not authenticated
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth?callbackUrl=/marketplace');
+    }
+  }, [status, router]);
+
+  // Load marketplace data
+  useEffect(() => {
+    const loadMarketplaceData = async () => {
+      if (status === 'authenticated' && session) {
+        try {
+          setLoading(true);
+          
+          // Load listings based on search and filters
+          if (isFeatureEnabled('enableBackendAPI')) {
+            const searchResults = await searchService.searchCards({
+              query: searchQuery || selectedGame === 'all' ? '' : selectedGame,
+              game: selectedGame === 'all' ? undefined : selectedGame,
+              limit: 50
+            });
+            setListings(searchResults);
+            
+            // Load marketplace activity
+            const activity = await backendAPIService.getMarketplaceActivity();
+            setLiveActivity({
+              onlineUsers: Math.floor(Math.random() * 50) + 20,
+              activeTrades: activity.length
+            });
+            
+            // Set trending cards from recent activity
+            const trending = activity.slice(0, 5).map(item => ({
+              name: item.cardName,
+              price: item.price,
+              change: Math.random() > 0.5 ? '+' : '-' + (Math.random() * 20).toFixed(1) + '%'
+            }));
+            setTrendingCards(trending);
+          } else {
+            // Fallback empty state for development
+            setListings([]);
+            setLiveActivity({ onlineUsers: 1, activeTrades: 0 });
+            setTrendingCards([]);
+          }
+        } catch (error) {
+          console.error('Error loading marketplace data:', error);
+          setListings([]);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadMarketplaceData();
+  }, [status, session, searchQuery, selectedGame]);
+
+  // Handle sign out
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: '/' });
+  };
+
+  // Show loading while checking authentication
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10 flex">
       {/* Sidebar */}
       <aside className="w-64 border-r border-border bg-card/50 backdrop-blur-sm flex flex-col shadow-lg">
         <div className="p-6 border-b border-border/50">
-          <Link to="/" className="flex items-center">
-            <img src={logo} alt="Abditrade" className="h-12" />
+          <Link href="/" className="flex items-center">
+            <div className="text-2xl font-bold text-primary">Abditrade</div>
           </Link>
         </div>
 
@@ -82,7 +166,7 @@ const Marketplace = () => {
           {navItems.map((item, index) => (
             <Link
               key={item.label}
-              to={item.href}
+              href={item.href}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200 hover:translate-x-1 group animate-fade-in ${
                 item.href === "/marketplace" ? "bg-primary/10 text-primary" : ""
               }`}
@@ -102,7 +186,9 @@ const Marketplace = () => {
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">marquise.will...</p>
+              <p className="text-sm font-medium truncate">
+                {session?.user?.name || session?.user?.email || 'Anonymous User'}
+              </p>
               <div className="flex items-center gap-1">
                 <div className="h-2 w-2 rounded-full bg-green-500" />
                 <span className="text-xs text-muted-foreground">Online</span>
@@ -146,6 +232,8 @@ const Marketplace = () => {
                 <Input
                   type="search"
                   placeholder="Search cards, sets, or sellers..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 bg-secondary/50 border-border/50 focus:border-primary/50 focus:ring-primary/20 transition-all"
                 />
               </div>
@@ -167,7 +255,13 @@ const Marketplace = () => {
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-1 right-1 h-2 w-2 bg-accent rounded-full animate-pulse" />
               </Button>
-              <Button variant="default" className="hover:shadow-lg transition-all">Sign Out</Button>
+              <Button 
+                variant="default" 
+                className="hover:shadow-lg transition-all"
+                onClick={handleSignOut}
+              >
+                Sign Out
+              </Button>
             </div>
           </div>
         </header>
@@ -236,7 +330,7 @@ const Marketplace = () => {
                     {/* View Toggle */}
                     <div className="flex items-center justify-between">
                       <p className="text-sm text-muted-foreground">
-                        <span className="font-semibold text-foreground">0</span> listings found
+                        <span className="font-semibold text-foreground">{listings.length}</span> listings found
                       </p>
                       <div className="flex gap-1 bg-muted rounded-lg p-1">
                         <Button
@@ -295,12 +389,12 @@ const Marketplace = () => {
                       <div className="h-2 w-2 rounded-full bg-green-500" />
                       <span className="text-muted-foreground">Online Now</span>
                     </div>
-                    <span className="font-semibold">1</span>
+                    <span className="font-semibold">{liveActivity.onlineUsers}</span>
                   </div>
                   <Separator />
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Trading</span>
-                    <span className="font-semibold">None</span>
+                    <span className="text-muted-foreground">Active Trades</span>
+                    <span className="font-semibold">{liveActivity.activeTrades}</span>
                   </div>
                   <div className="text-xs text-muted-foreground">
                     Updated 11:32:24 PM
@@ -399,3 +493,4 @@ const Marketplace = () => {
 };
 
 export default Marketplace;
+

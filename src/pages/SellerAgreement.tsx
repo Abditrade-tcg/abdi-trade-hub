@@ -302,3 +302,4 @@ const SellerAgreement = () => {
 };
 
 export default SellerAgreement;
+

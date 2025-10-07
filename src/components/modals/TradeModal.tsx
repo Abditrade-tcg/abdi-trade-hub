@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeftRight, MessageSquare, DollarSign, ShieldCheck, Plus, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/router";
 import { OrderConfirmationModal } from "./OrderConfirmationModal";
 
 interface TradeItem {
@@ -32,7 +32,7 @@ interface TradeModalProps {
 }
 
 export const TradeModal = ({ open, onOpenChange, otherUser, currentUserItems }: TradeModalProps) => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [selectedMyItems, setSelectedMyItems] = useState<string[]>([]);
   const [selectedTheirItems, setSelectedTheirItems] = useState<string[]>([]);
   const [cashCompensation, setCashCompensation] = useState(0);
@@ -90,7 +90,7 @@ export const TradeModal = ({ open, onOpenChange, otherUser, currentUserItems }: 
     onOpenChange(false);
     
     // Navigate to trades page
-    setTimeout(() => navigate("/trades"), 500);
+    setTimeout(() => router.push("/trades"), 500);
   };
 
   return (

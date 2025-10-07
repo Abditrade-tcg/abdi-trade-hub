@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +14,7 @@ import { ArrowLeftRight, DollarSign, Search, User, Filter } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 const CreateTrade = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [searchUser, setSearchUser] = useState("");
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [myCards, setMyCards] = useState<any[]>([]);
@@ -110,7 +111,7 @@ const CreateTrade = () => {
         <div className="container mx-auto px-4 max-w-7xl">
           {/* Header */}
           <div className="mb-8">
-            <Link to="/trades">
+            <Link href="/trades">
               <Button variant="ghost" className="gap-2 mb-4">
                 <ArrowLeftRight className="h-4 w-4" />
                 Back to Trades
@@ -462,3 +463,4 @@ const CreateTrade = () => {
 };
 
 export default CreateTrade;
+

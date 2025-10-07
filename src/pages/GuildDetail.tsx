@@ -24,7 +24,8 @@ import {
   Image as ImageIcon,
   Star,
 } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import logo from "@/assets/abditrade-logo.png";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -34,7 +35,9 @@ import { TradeModal } from "@/components/modals/TradeModal";
 import { CardDetailModal } from "@/components/modals/CardDetailModal";
 
 const GuildDetail = () => {
-  const { guildId } = useParams();
+  // For Next.js, guildId would come from router.query or params
+  const router = useRouter();
+  const guildId = "example-guild"; // This would be dynamic in production
   const [newPost, setNewPost] = useState("");
   const [showCheckout, setShowCheckout] = useState(false);
   const [showTrade, setShowTrade] = useState(false);
@@ -167,7 +170,7 @@ const GuildDetail = () => {
       {/* Sidebar */}
       <aside className="w-64 border-r border-border bg-card/50 backdrop-blur-sm flex flex-col shadow-lg">
         <div className="p-6 border-b border-border/50">
-          <Link to="/" className="flex items-center">
+          <Link href="/" className="flex items-center">
             <img src={logo} alt="Abditrade" className="h-12" />
           </Link>
         </div>
@@ -176,7 +179,7 @@ const GuildDetail = () => {
           {navItems.map((item, index) => (
             <Link
               key={item.label}
-              to={item.href}
+              href={item.href}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 hover:translate-x-1 group animate-fade-in ${
                 item.label === "Guilds"
                   ? "bg-primary/10 text-primary"
@@ -213,7 +216,7 @@ const GuildDetail = () => {
         {/* Header */}
         <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-sm">
           <div className="flex items-center justify-between px-6 py-4">
-            <Link to="/guilds">
+            <Link href="/guilds">
               <Button variant="ghost" size="sm" className="gap-2">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Guilds
@@ -518,7 +521,7 @@ const GuildDetail = () => {
                                     </div>
                                     <div className="flex gap-2">
                                       {post.postType === "trade" && (
-                                        <Link to="/trades">
+                                        <Link href="/trades">
                                           <Button size="sm" className="gap-2">
                                             <ArrowLeftRight className="h-4 w-4" />
                                             Make Offer
@@ -526,7 +529,7 @@ const GuildDetail = () => {
                                         </Link>
                                       )}
                                       {post.postType === "sell" && (
-                                        <Link to="/orders">
+                                        <Link href="/orders">
                                           <Button size="sm" className="gap-2">
                                             <ShoppingCart className="h-4 w-4" />
                                             Purchase
@@ -534,7 +537,7 @@ const GuildDetail = () => {
                                         </Link>
                                       )}
                                       {post.postType === "buy" && (
-                                        <Link to="/trades">
+                                        <Link href="/trades">
                                           <Button size="sm" className="gap-2">
                                             <Send className="h-4 w-4" />
                                             Submit Offer
@@ -641,7 +644,7 @@ const GuildDetail = () => {
                                     </div>
                                     <div className="flex gap-2">
                                       {post.postType === "trade" && (
-                                        <Link to="/trades">
+                                        <Link href="/trades">
                                           <Button size="sm" className="gap-2">
                                             <ArrowLeftRight className="h-4 w-4" />
                                             Make Offer
@@ -649,7 +652,7 @@ const GuildDetail = () => {
                                         </Link>
                                       )}
                                       {post.postType === "sell" && (
-                                        <Link to="/orders">
+                                        <Link href="/orders">
                                           <Button size="sm" className="gap-2">
                                             <ShoppingCart className="h-4 w-4" />
                                             Purchase
@@ -657,7 +660,7 @@ const GuildDetail = () => {
                                         </Link>
                                       )}
                                       {post.postType === "buy" && (
-                                        <Link to="/trades">
+                                        <Link href="/trades">
                                           <Button size="sm" className="gap-2">
                                             <Send className="h-4 w-4" />
                                             Submit Offer
@@ -844,3 +847,4 @@ const GuildDetail = () => {
 };
 
 export default GuildDetail;
+

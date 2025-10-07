@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -260,7 +260,7 @@ const Browse = () => {
           {/* Results Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {mockListings.map((listing) => (
-              <Link key={listing.id} to={`/listings/${listing.id}`}>
+              <Link key={listing.id} href={`/listings/${listing.id}`}>
                 <Card className="group hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer border-border/50 hover:border-primary/30">
                   <CardContent className="p-0">
                     {/* Image */}
@@ -343,3 +343,4 @@ const Browse = () => {
 };
 
 export default Browse;
+

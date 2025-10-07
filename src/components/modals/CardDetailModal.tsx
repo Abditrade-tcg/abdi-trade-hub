@@ -1,3 +1,6 @@
+"use client";
+
+import Image from "next/image";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -61,7 +64,7 @@ export const CardDetailModal = ({ open, onOpenChange, card }: CardDetailModalPro
             <div className="space-y-4">
               <div className="aspect-[2.5/3.5] bg-gradient-to-br from-primary/5 to-accent/5 rounded-lg border border-border flex items-center justify-center">
                 {card.image ? (
-                  <img src={card.image} alt={card.name} className="w-full h-full object-contain rounded-lg" />
+                  <Image src={card.image} alt={card.name} width={400} height={560} className="w-full h-full object-contain rounded-lg" />
                 ) : (
                   <Package className="h-24 w-24 text-muted-foreground" />
                 )}

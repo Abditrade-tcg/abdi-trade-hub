@@ -32,13 +32,111 @@ import {
   FileText,
   Activity,
 } from "lucide-react";
-import { Link } from "react-router-dom";
-import logo from "@/assets/abditrade-logo.png";
+import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState, useEffect } from "react";
+import { userManagementService } from "@/services/userManagementService";
+import { backendAPIService } from "@/services/backendAPIService";
+import { isFeatureEnabled } from "@/config/environmentManager";
 
 const Admin = () => {
+  const { data: session, status } = useSession() || { data: null, status: 'loading' };
+  const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [platformStats, setPlatformStats] = useState({
+    totalRevenue: 0,
+    activeUsers: 0,
+    totalListings: 0,
+    openDisputes: 0
+  });
+  const [recentActivity, setRecentActivity] = useState([]);
+
+  // Check if user has admin access
+  useEffect(() => {
+    const checkAdminAccess = async () => {
+      if (status === 'unauthenticated') {
+        router.push('/auth?callbackUrl=/admin');
+        return;
+      }
+
+      if (status === 'authenticated' && session?.user?.email) {
+        try {
+          // Check if user has admin role
+          const profile = await userManagementService.getUserProfile(session.user.email);
+          const role = profile?.roles?.[0] || null;
+          
+          if (!role || !['admin', 'hr', 'ceo', 'cfo', 'trust_safety'].includes(role)) {
+            // Redirect non-admin users
+            router.push('/dashboard');
+            return;
+          }
+          
+          setUserRole(role);
+          
+          // Load admin data with proper error handling
+          try {
+            const [stats, activity] = await Promise.all([
+              backendAPIService.getAdminStats(),
+              backendAPIService.getRecentActivity()
+            ]);
+            
+            setPlatformStats({
+              totalRevenue: stats.totalRevenue,
+              activeUsers: stats.activeUsers,
+              totalListings: stats.totalListings,
+              openDisputes: stats.openDisputes
+            });
+            
+            setRecentActivity(activity);
+          } catch (apiError) {
+            console.error('Error loading admin data:', apiError);
+            // Set default values if API fails
+            setPlatformStats({
+              totalRevenue: 0,
+              activeUsers: 0,
+              totalListings: 0,
+              openDisputes: 0
+            });
+            setRecentActivity([]);
+          }
+        } catch (error) {
+          console.error('Error checking admin access:', error);
+          router.push('/dashboard');
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    checkAdminAccess();
+  }, [status, session, router]);
+
+  // Handle sign out
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: '/' });
+  };
+
+  // Show loading while checking access
+  if (status === 'loading' || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Checking admin access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if no role (will redirect)
+  if (!userRole) {
+    return null;
+  }
 
   const navItems = [
     { icon: Home, label: "Home", href: "/dashboard" },
@@ -53,26 +151,22 @@ const Admin = () => {
     { icon: AlertTriangle, label: "Disputes", href: "/disputes" },
   ];
 
-  const platformStats = [
-    { value: "$0", label: "Total Revenue", icon: DollarSign, color: "text-green-500" },
-    { value: "0", label: "Active Users", icon: Users, color: "text-primary" },
-    { value: "0", label: "Total Listings", icon: Package, color: "text-accent" },
-    { value: "0", label: "Open Disputes", icon: AlertTriangle, color: "text-red-500" },
+  const statsData = [
+    { value: `$${platformStats.totalRevenue.toLocaleString()}`, label: "Total Revenue", icon: DollarSign, color: "text-green-500" },
+    { value: platformStats.activeUsers.toLocaleString(), label: "Active Users", icon: Users, color: "text-primary" },
+    { value: platformStats.totalListings.toLocaleString(), label: "Total Listings", icon: Package, color: "text-accent" },
+    { value: platformStats.openDisputes.toString(), label: "Open Disputes", icon: AlertTriangle, color: "text-red-500" },
   ];
 
-  const recentActivity = [
-    { type: "New User", user: "User #1", time: "Just now" },
-    { type: "New Listing", user: "User #2", time: "2 mins ago" },
-    { type: "Trade Completed", user: "User #3", time: "5 mins ago" },
-  ];
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10 flex">
       {/* Sidebar */}
       <aside className="w-64 border-r border-border bg-card/50 backdrop-blur-sm flex flex-col shadow-lg">
         <div className="p-6 border-b border-border/50">
-          <Link to="/" className="flex items-center">
-            <img src={logo} alt="Abditrade" className="h-12" />
+          <Link href="/" className="flex items-center">
+            <div className="text-2xl font-bold text-primary">Abditrade</div>
           </Link>
         </div>
 
@@ -80,7 +174,7 @@ const Admin = () => {
           {navItems.map((item, index) => (
             <Link
               key={item.label}
-              to={item.href}
+              href={item.href}
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200 hover:translate-x-1 group animate-fade-in"
               style={{ animationDelay: `${index * 50}ms` }}
             >
@@ -93,7 +187,7 @@ const Admin = () => {
           
           {/* Admin Section */}
           <Link
-            to="/admin"
+            href="/admin"
             className="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary transition-all duration-200 hover:translate-x-1 group animate-fade-in"
           >
             <Shield className="h-5 w-5 group-hover:scale-110 transition-transform" />
@@ -106,14 +200,16 @@ const Admin = () => {
           <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 hover:shadow-lg transition-all duration-300 cursor-pointer group">
             <Avatar className="ring-2 ring-primary/20 group-hover:ring-primary/40 transition-all">
               <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-semibold">
-                A
+                {session?.user?.name?.[0]?.toUpperCase() || session?.user?.email?.[0]?.toUpperCase() || 'A'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">Admin User</p>
+              <p className="text-sm font-medium truncate">
+                {session?.user?.name || session?.user?.email || 'Admin User'}
+              </p>
               <div className="flex items-center gap-1">
                 <Shield className="h-3 w-3 text-accent" />
-                <span className="text-xs text-muted-foreground">Staff</span>
+                <span className="text-xs text-muted-foreground capitalize">{userRole}</span>
               </div>
             </div>
           </div>
@@ -152,7 +248,13 @@ const Admin = () => {
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-1 right-1 h-2 w-2 bg-accent rounded-full animate-pulse" />
               </Button>
-              <Button variant="default" className="hover:shadow-lg transition-all">Sign Out</Button>
+              <Button 
+                variant="default" 
+                className="hover:shadow-lg transition-all"
+                onClick={handleSignOut}
+              >
+                Sign Out
+              </Button>
             </div>
           </div>
         </header>
@@ -182,7 +284,7 @@ const Admin = () => {
 
           {/* Platform Stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            {platformStats.map((stat, index) => (
+            {statsData.map((stat, index) => (
               <Card
                 key={index}
                 className="shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group animate-fade-in hover:scale-105 border-border/50 hover:border-primary/30"
@@ -224,7 +326,7 @@ const Admin = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <Link to="/admin/ceo">
+                        <Link href="/admin/ceo">
                           <Button variant="outline" className="w-full justify-start gap-2 h-auto py-4 hover:bg-primary/10 hover:border-primary">
                             <Shield className="h-5 w-5 text-primary" />
                             <div className="text-left">
@@ -233,7 +335,7 @@ const Admin = () => {
                             </div>
                           </Button>
                         </Link>
-                        <Link to="/admin/cfo">
+                        <Link href="/admin/cfo">
                           <Button variant="outline" className="w-full justify-start gap-2 h-auto py-4 hover:bg-primary/10 hover:border-primary">
                             <DollarSign className="h-5 w-5 text-green-500" />
                             <div className="text-left">
@@ -242,7 +344,7 @@ const Admin = () => {
                             </div>
                           </Button>
                         </Link>
-                        <Link to="/admin/hr">
+                        <Link href="/admin/hr">
                           <Button variant="outline" className="w-full justify-start gap-2 h-auto py-4 hover:bg-primary/10 hover:border-primary">
                             <UserCog className="h-5 w-5 text-blue-500" />
                             <div className="text-left">
@@ -251,7 +353,7 @@ const Admin = () => {
                             </div>
                           </Button>
                         </Link>
-                        <Link to="/admin/trust-safety">
+                        <Link href="/admin/trust-safety">
                           <Button variant="outline" className="w-full justify-start gap-2 h-auto py-4 hover:bg-primary/10 hover:border-primary">
                             <Shield className="h-5 w-5 text-orange-500" />
                             <div className="text-left">
@@ -260,7 +362,7 @@ const Admin = () => {
                             </div>
                           </Button>
                         </Link>
-                        <Link to="/admin/order-management" className="md:col-span-2">
+                        <Link href="/admin/order-management" className="md:col-span-2">
                           <Button variant="outline" className="w-full justify-start gap-2 h-auto py-4 hover:bg-primary/10 hover:border-primary">
                             <Package className="h-5 w-5 text-purple-500" />
                             <div className="text-left">
@@ -415,3 +517,4 @@ const Admin = () => {
 };
 
 export default Admin;
+

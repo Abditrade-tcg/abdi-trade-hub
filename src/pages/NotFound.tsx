@@ -1,12 +1,16 @@
-import { useLocation } from "react-router-dom";
+import Link from "next/link";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const NotFound = () => {
-  const location = useLocation();
+  const router = useRouter();
 
   useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
-  }, [location.pathname]);
+    // In Next.js, we can get the pathname from window.location.pathname on client side
+    if (typeof window !== 'undefined') {
+      console.error("404 Error: User attempted to access non-existent route:", window.location.pathname);
+    }
+  }, []);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">
@@ -22,3 +26,4 @@ const NotFound = () => {
 };
 
 export default NotFound;
+

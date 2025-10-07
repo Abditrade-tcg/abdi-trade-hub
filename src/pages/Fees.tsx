@@ -3,7 +3,7 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, DollarSign, Shield, Zap, TrendingUp } from "lucide-react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 const Fees = () => {
   const feeStructure = [
@@ -352,10 +352,10 @@ const Fees = () => {
                 Join thousands of collectors enjoying transparent, fair pricing
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/auth">
+                <Link href="/auth">
                   <Button size="lg">Create Free Account</Button>
                 </Link>
-                <Link to="/contact">
+                <Link href="/contact">
                   <Button size="lg" variant="outline">Have Questions?</Button>
                 </Link>
               </div>
@@ -370,3 +370,4 @@ const Fees = () => {
 };
 
 export default Fees;
+

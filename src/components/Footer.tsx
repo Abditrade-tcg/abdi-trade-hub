@@ -1,3 +1,5 @@
+"use client";
+
 import { Facebook, Twitter, Instagram, Youtube } from "lucide-react";
 
 const Footer = () => {
