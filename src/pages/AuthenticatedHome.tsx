@@ -86,7 +86,7 @@ const AuthenticatedHome = () => {
         
         // Load trending cards
         if (isFeatureEnabled('enableOpenSearch')) {
-          const searchResults = await openSearchService.searchCards({ query: '', pagination: { size: 5 } });
+          const searchResults = await openSearchService.searchCards({ query: '', pagination: { page: 1, size: 5 } });
           setTrendingCards(searchResults.cards.slice(0, 5));
         }
         

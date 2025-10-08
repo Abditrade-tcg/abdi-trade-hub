@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, TrendingUp, RefreshCw, Loader2 } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
 import { useCards } from "@/hooks/useCards";
 
 const PopularCards = () => {
@@ -26,7 +27,7 @@ const PopularCards = () => {
             </span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Explore cards from One Piece, Dragon Ball, Digimon, Union Arena, Gundam, Star Wars, and Riftbound
+            Explore cards from Pokémon, Yu-Gi-Oh!, Magic: The Gathering, One Piece, Dragon Ball, Digimon, Union Arena, Gundam, and Star Wars
           </p>
         </div>
 
@@ -89,7 +90,9 @@ const PopularCards = () => {
                     <h3 className="text-lg font-bold text-foreground">{card.name}</h3>
                     <div className="flex items-center justify-between">
                       <p className="text-sm text-accent">{card.rarity || 'Common'}</p>
-                      <p className="text-sm font-semibold text-white border border-white/30 bg-black/20 backdrop-blur-sm px-2 py-1 rounded-md">{card.price}</p>
+                      {typeof card.price === 'number' && card.price > 0 && (
+                        <p className="text-sm font-semibold text-white border border-white/30 bg-black/20 backdrop-blur-sm px-2 py-1 rounded-md">{formatPrice(card.price)}</p>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -19,13 +19,25 @@ let client: SecretsManagerClient | null = null;
 // Initialize the Secrets Manager client
 function getClient(): SecretsManagerClient {
   if (!client) {
-    client = new SecretsManagerClient({
+    // AWS_PROFILE is read from environment variables automatically
+
+    const config: { region: string; credentials?: { accessKeyId: string; secretAccessKey: string } } = {
       region: process.env.AWS_REGION || 'us-east-2',
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-      },
-    });
+    };
+
+    // Use explicit credentials if provided, otherwise use default credential chain (includes SSO)
+    if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && 
+        process.env.AWS_ACCESS_KEY_ID !== 'dummy-access-key-for-dev') {
+      config.credentials = {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      };
+      console.log('🔑 Using explicit AWS credentials for Secrets Manager');
+    } else {
+      console.log('🔑 Using AWS default credential chain (includes SSO profile:', process.env.AWS_PROFILE || 'default', ')');
+    }
+
+    client = new SecretsManagerClient(config);
   }
   return client;
 }
@@ -35,8 +47,11 @@ const secretsCache = new Map<string, { value: string; expiry: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 export async function getSecret(secretName: string): Promise<string> {
-  // For development/build, return empty string if AWS credentials are not configured
-  if (!process.env.AWS_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID === 'dummy-access-key-for-dev') {
+  // For development/build, check if we have AWS credentials (either explicit or SSO profile)
+  const hasExplicitCredentials = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_ACCESS_KEY_ID !== 'dummy-access-key-for-dev';
+  const hasAwsProfile = process.env.AWS_PROFILE;
+  
+  if (!hasExplicitCredentials && !hasAwsProfile) {
     console.warn(`Development mode: AWS Secrets Manager not configured for secret: ${secretName}`);
     return '';
   }
@@ -162,14 +177,28 @@ export async function getRedisSecrets() {
 export async function getExternalAPISecrets() {
   try {
     // Get individual secrets from AWS Secrets Manager
-    const [pokemonTCGKey, easyPostKey] = await Promise.all([
+    const [pokemonTCGKey, easyPostKey, apiTCGSecretString] = await Promise.all([
       getSecret('pokemon-tcg-api'),
-      getSecret('easy-post')
+      getSecret('easy-post'),
+      getSecret('api_tcg') // Using 'api_tcg' as documented in AWS Secrets Manager
     ]);
+    
+    // Parse API_TCG key from JSON format
+    let apiTCGKey = '';
+    if (apiTCGSecretString) {
+      try {
+        const apiTCGSecret = JSON.parse(apiTCGSecretString);
+        apiTCGKey = apiTCGSecret.api_tcg || '';
+      } catch (error) {
+        console.warn('Failed to parse api_tcg secret as JSON, using as string');
+        apiTCGKey = apiTCGSecretString;
+      }
+    }
     
     return {
       pokemonTCG: pokemonTCGKey || process.env.POKEMON_TCG_API_KEY || '',
       easyPost: easyPostKey || process.env.EASYPOST_API_KEY || '',
+      apiTCG: apiTCGKey || process.env.API_TCG_KEY || '', // Added API_TCG support
       sentryDSN: process.env.SENTRY_DSN || '',
       googleAnalytics: process.env.GOOGLE_ANALYTICS_ID || '',
       cloudinary: {
@@ -183,6 +212,7 @@ export async function getExternalAPISecrets() {
     return {
       pokemonTCG: process.env.POKEMON_TCG_API_KEY || '',
       easyPost: process.env.EASYPOST_API_KEY || '',
+      apiTCG: process.env.API_TCG_KEY || '', // Added API_TCG fallback
       sentryDSN: process.env.SENTRY_DSN || '',
       googleAnalytics: process.env.GOOGLE_ANALYTICS_ID || '',
       cloudinary: {

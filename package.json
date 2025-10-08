@@ -15,6 +15,8 @@
     "@aws-sdk/client-opensearch": "^3.901.0",
     "@aws-sdk/client-s3": "^3.901.0",
     "@aws-sdk/client-secrets-manager": "^3.901.0",
+    "@aws-sdk/credential-provider-node": "^3.901.0",
+    "@aws-sdk/credential-provider-sso": "^3.901.0",
     "@aws-sdk/lib-dynamodb": "^3.902.0",
     "@hookform/resolvers": "^3.10.0",
     "@next-auth/dynamodb-adapter": "^3.0.2",

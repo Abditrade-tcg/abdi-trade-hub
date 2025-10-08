@@ -2,6 +2,7 @@ import { S3Client, GetObjectCommand, PutObjectCommand, HeadObjectCommand } from 
 import { config } from '@/config';
 import { withRetry, withCircuitBreaker } from './awsErrorHandler';
 import { ScryfallCard, ApiTcgCard } from '@/types';
+import { getSecret } from '@/lib/secrets';
 
 interface ApiTcgResponse extends ApiTcgCard {
   market_price?: number;
@@ -101,6 +102,11 @@ class CardDataService {
    * Get cached card data from S3
    */
   private async getCachedData(key: string): Promise<CachedCardData | null> {
+    // Skip caching in development to avoid CORS issues
+    if (process.env.NODE_ENV === 'development') {
+      return null;
+    }
+    
     try {
       const command = new GetObjectCommand({
         Bucket: this.bucketName,
@@ -135,6 +141,11 @@ class CardDataService {
    * Store card data in S3 cache
    */
   private async setCachedData(key: string, data: CardData[], source: string): Promise<void> {
+    // Skip caching in development to avoid CORS issues
+    if (process.env.NODE_ENV === 'development') {
+      return;
+    }
+    
     try {
       const cachedData: CachedCardData = {
         data,
@@ -430,38 +441,67 @@ class CardDataService {
 
   /**
    * API TCG integration for One Piece, Gundam, Dragon Ball, etc.
-   * Updated to match official APITCG documentation format
+   * Direct API integration to avoid circular dependency
    */
   private async fetchApiTcgCards(params: CardSearchParams): Promise<CardData[]> {
     const { game, query, limit = 20 } = params;
     
-    // Convert game name to API TCG endpoint format
-    const gameEndpoint = this.getApiTcgGameEndpoint(game);
-    // Use the correct APITCG URL format: https://apitcg.com/api/[tcg]/cards
-    const apiUrl = `https://apitcg.com/api/${gameEndpoint}/cards`;
-    
-    // APITCG uses property-value pairs for searching (e.g., ?name=luffy)
+    // Get API key from secrets or environment
+    let apiKey: string;
+    try {
+      apiKey = await getSecret('api_tcg');
+    } catch (error) {
+      console.warn('Failed to get API key from AWS Secrets Manager, falling back to environment variable');
+      apiKey = process.env.API_TCG_KEY || '';
+    }
+
+    if (!apiKey) {
+      throw new Error('API_TCG API key not found');
+    }
+
+    // Game endpoint mappings
+    const gameEndpoints: Record<string, string> = {
+      'one_piece': 'one-piece',
+      'dragon_ball_fusion': 'dragon-ball-fusion',
+      'digimon': 'digimon',
+      'union_arena': 'union-arena',
+      'gundam': 'gundam',
+      'star_wars': 'star-wars-unlimited',
+      'riftbound': 'riftbound'
+    };
+
+    const endpoint = gameEndpoints[game];
+    if (!endpoint) {
+      throw new Error(`Unsupported API TCG game: ${game}`);
+    }
+
+    const baseUrl = 'https://www.apitcg.com/api';
     const searchParams = new URLSearchParams({
-      name: query, // Search by name property
+      limit: limit.toString(),
     });
-
-    console.log(`🌐 Fetching APITCG cards from: ${apiUrl}?${searchParams}`);
     
-    // Add API key header if available
-    const headers: Record<string, string> = {};
-    if (config.cardApis.apiTcg.apiKey) {
-      headers['x-api-key'] = config.cardApis.apiTcg.apiKey;
+    if (query) {
+      searchParams.append('name', query);
     }
+
+    const url = `${baseUrl}/${endpoint}/cards?${searchParams}`;
+    console.log(`🌐 Fetching ${game} cards directly from API TCG: ${url}`);
+
+    const response = await fetch(url, {
+      headers: {
+        'X-API-Key': apiKey,
+        'Content-Type': 'application/json',
+      },
+    });
     
-    const response = await fetch(`${apiUrl}?${searchParams}`, { headers });
     if (!response.ok) {
-      throw new Error(`APITCG ${gameEndpoint} API error: ${response.status}`);
+      throw new Error(`API_TCG ${game} API error: ${response.status} ${response.statusText}`);
     }
 
-    const result = await response.json();
-    const cards = result.data || [];
+    const data = await response.json();
+    const cards = data.cards || data || [];
     
-    console.log(`✅ APITCG returned ${cards.length} cards for ${gameEndpoint}`);
+    console.log(`✅ API_TCG returned ${cards.length} cards for ${game}`);
     
     // Apply limit client-side and map to our CardData format
     return cards.slice(0, limit).map((card: ApiTcgResponse) => ({
@@ -478,36 +518,54 @@ class CardDataService {
   }
 
   private async fetchApiTcgCardById(game: string, cardId: string): Promise<CardData | null> {
-    const gameEndpoint = this.getApiTcgGameEndpoint(game);
-    // Use the correct APITCG URL format: https://apitcg.com/api/[tcg]/cards
-    const apiUrl = `https://apitcg.com/api/${gameEndpoint}/cards`;
-    
-    // Search by ID property using APITCG format
-    const searchParams = new URLSearchParams({
-      id: cardId,
-    });
-
-    console.log(`🌐 Fetching APITCG card by ID from: ${apiUrl}?${searchParams}`);
-
-    // Add API key header if available
-    const headers: Record<string, string> = {};
-    if (config.cardApis.apiTcg.apiKey) {
-      headers['x-api-key'] = config.cardApis.apiTcg.apiKey;
+    // Get API key from secrets or environment
+    let apiKey: string;
+    try {
+      apiKey = await getSecret('api_tcg');
+    } catch (error) {
+      console.warn('Failed to get API key from AWS Secrets Manager, falling back to environment variable');
+      apiKey = process.env.API_TCG_KEY || '';
     }
 
-    const response = await fetch(`${apiUrl}?${searchParams}`, { headers });
+    if (!apiKey) {
+      throw new Error('API_TCG API key not found');
+    }
+
+    const gameEndpoints: Record<string, string> = {
+      'one_piece': 'one-piece',
+      'dragon_ball_fusion': 'dragon-ball-fusion',
+      'digimon': 'digimon',
+      'union_arena': 'union-arena',
+      'gundam': 'gundam',
+      'star_wars': 'star-wars-unlimited',
+      'riftbound': 'riftbound'
+    };
+
+    const endpoint = gameEndpoints[game];
+    if (!endpoint) {
+      throw new Error(`Unsupported API TCG game: ${game}`);
+    }
+
+    const baseUrl = 'https://www.apitcg.com/api';
+    const url = `${baseUrl}/${endpoint}/cards/${cardId}`;
+
+    console.log(`🌐 Fetching card by ID from API TCG: ${url}`);
+
+    const response = await fetch(url, {
+      headers: {
+        'X-API-Key': apiKey,
+        'Content-Type': 'application/json',
+      },
+    });
+
     if (!response.ok) {
       if (response.status === 404) {
         return null;
       }
-      throw new Error(`APITCG ${gameEndpoint} API error: ${response.status}`);
+      throw new Error(`API_TCG ${game} API error: ${response.status}`);
     }
 
-    const result = await response.json();
-    const cards = result.data || [];
-    // Find the card by ID or code
-    const card = cards.find((c: ApiTcgResponse) => c.id === cardId || c.code === cardId);
-    
+    const card = await response.json();
     if (!card) return null;
 
     console.log(`✅ APITCG found card: ${card.name}`);

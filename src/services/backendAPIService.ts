@@ -299,9 +299,7 @@ class BackendAPIService {
       return response.data || [];
     } catch (error) {
       console.error('❌ Backend card search failed:', error);
-      
-      // Return mock data for development/fallback
-      return this.getMockCards(params);
+      return []; // Return empty array for production
     }
   }
 
@@ -312,14 +310,14 @@ class BackendAPIService {
     try {
       console.log('📈 Getting trending cards from backend');
       
-      // Use search endpoint with popularity sorting for trending cards
-      const endpoint = `/v1/cards/search?game=pokemon&limit=${limit}&sortBy=popularity&sortOrder=desc`;
+      // Use search endpoint with popularity sorting for trending cards from all games
+      const endpoint = `/v1/cards/search?limit=${limit}&sortBy=popularity&sortOrder=desc`;
       const response = await this.makeRequest<CanonicalCard[]>(endpoint);
       
       return response.data || [];
     } catch (error) {
       console.error('❌ Failed to get trending cards:', error);
-      return this.getMockCards({ limit });
+      return []; // Return empty array for production
     }
   }
 
@@ -336,7 +334,7 @@ class BackendAPIService {
       return response.data || [];
     } catch (error) {
       console.error('❌ Failed to get random cards:', error);
-      return this.getMockCards({ limit });
+      return []; // Return empty array for production
     }
   }
 
@@ -538,7 +536,7 @@ class BackendAPIService {
         name: 'Monkey D. Luffy',
         game: 'one_piece',
         price: 67.25,
-        image: 'https://limitlesstcg.nyc3.digitaloceanspaces.com/one-piece/OP01/EN/OP01-003.png',
+        image: 'https://images.pokemontcg.io/base1/25.png',
         condition: 'mint',
         rarity: 'Super Rare',
         set: 'Romance Dawn',
@@ -552,6 +550,153 @@ class BackendAPIService {
         priceHistory: [
           { date: '2024-01-01', price: 65.00 },
           { date: '2024-01-14', price: 67.25 },
+        ],
+      },
+      {
+        id: 'onepiece-nami-op02',
+        name: 'Nami',
+        game: 'one_piece',
+        price: 32.50,
+        image: 'https://cards.scryfall.io/normal/front/7/7/77c6fa74-5543-42ac-9ead-0e890b188e99.jpg?1706239968',
+        condition: 'near-mint',
+        rarity: 'Rare',
+        set: 'Paramount War',
+        seller: {
+          id: 'seller6',
+          name: 'OnePieceCollector',
+          rating: 4.7,
+          sales: 423,
+        },
+        lastSold: '2024-01-13T16:20:00Z',
+        priceHistory: [
+          { date: '2024-01-01', price: 30.00 },
+          { date: '2024-01-13', price: 32.50 },
+        ],
+      },
+      {
+        id: 'gundam-barbatos-gw01',
+        name: 'Gundam Barbatos',
+        game: 'gundam',
+        price: 89.99,
+        image: 'https://images.pokemontcg.io/base1/25.png',
+        condition: 'mint',
+        rarity: 'Super Rare',
+        set: 'Iron-Blooded Orphans',
+        seller: {
+          id: 'seller7',
+          name: 'GundamElite',
+          rating: 4.8,
+          sales: 567,
+        },
+        lastSold: '2024-01-11T13:45:00Z',
+        priceHistory: [
+          { date: '2024-01-01', price: 85.00 },
+          { date: '2024-01-11', price: 89.99 },
+        ],
+      },
+      {
+        id: 'gundam-strike-gw02',
+        name: 'Strike Freedom Gundam',
+        game: 'gundam',
+        price: 156.75,
+        image: 'https://cards.scryfall.io/normal/front/b/d/bd8fa327-dd41-4737-8f19-2cf5eb1f7cdd.jpg',
+        condition: 'mint',
+        rarity: 'Ultra Rare',
+        set: 'Cosmic Era',
+        seller: {
+          id: 'seller8',
+          name: 'MobileSuitCards',
+          rating: 4.9,
+          sales: 234,
+        },
+        lastSold: '2024-01-09T08:30:00Z',
+        priceHistory: [
+          { date: '2024-01-01', price: 150.00 },
+          { date: '2024-01-09', price: 156.75 },
+        ],
+      },
+      {
+        id: 'union-arena-ua01',
+        name: 'Tanjiro Kamado',
+        game: 'union_arena',
+        price: 43.20,
+        image: 'https://images.pokemontcg.io/base1/25.png',
+        condition: 'near-mint',
+        rarity: 'SR',
+        set: 'Demon Slayer Vol.1',
+        seller: {
+          id: 'seller9',
+          name: 'UnionArenaShop',
+          rating: 4.5,
+          sales: 789,
+        },
+        lastSold: '2024-01-12T19:15:00Z',
+        priceHistory: [
+          { date: '2024-01-01', price: 40.00 },
+          { date: '2024-01-12', price: 43.20 },
+        ],
+      },
+      {
+        id: 'union-arena-ua02',
+        name: 'Nezuko Kamado',
+        game: 'union_arena',
+        price: 38.90,
+        image: 'https://cards.scryfall.io/normal/front/7/7/77c6fa74-5543-42ac-9ead-0e890b188e99.jpg?1706239968',
+        condition: 'mint',
+        rarity: 'R',
+        set: 'Demon Slayer Vol.1',
+        seller: {
+          id: 'seller10',
+          name: 'AnimeCardsPlus',
+          rating: 4.6,
+          sales: 1156,
+        },
+        lastSold: '2024-01-10T12:00:00Z',
+        priceHistory: [
+          { date: '2024-01-01', price: 35.00 },
+          { date: '2024-01-10', price: 38.90 },
+        ],
+      },
+      {
+        id: 'dragonball-goku-db01',
+        name: 'Son Goku, Ultra Instinct',
+        game: 'dragon_ball_fusion',
+        price: 278.50,
+        image: 'https://images.pokemontcg.io/base1/25.png',
+        condition: 'mint',
+        rarity: 'Secret Rare',
+        set: 'Universe Survival Saga',
+        seller: {
+          id: 'seller11',
+          name: 'DragonBallSuper',
+          rating: 4.9,
+          sales: 445,
+        },
+        lastSold: '2024-01-08T14:30:00Z',
+        priceHistory: [
+          { date: '2024-01-01', price: 260.00 },
+          { date: '2024-01-08', price: 278.50 },
+        ],
+      },
+      {
+        id: 'dragonball-vegeta-db02',
+        name: 'Vegeta, Saiyan Prince',
+        game: 'dragon_ball_fusion',
+        price: 198.25,
+        image: 'https://cards.scryfall.io/normal/front/b/d/bd8fa327-dd41-4737-8f19-2cf5eb1f7cdd.jpg',
+        condition: 'near-mint',
+        rarity: 'Super Rare',
+        set: 'Saiyan Saga',
+        seller: {
+          id: 'seller12',
+          name: 'SaiyanCards',
+          rating: 4.7,
+          sales: 672,
+        },
+        lastSold: '2024-01-07T17:45:00Z',
+        priceHistory: [
+          { date: '2024-01-01', price: 185.00 },
+          { date: '2024-01-07', price: 198.25 },
         ],
       },
     ];
@@ -580,6 +725,44 @@ class BackendAPIService {
         price: 125.00,
         timestamp: '2024-01-15T09:15:00Z',
         seller: 'PokeMart Elite',
+      },
+      {
+        id: 'activity3',
+        type: 'sale',
+        cardName: 'Monkey D. Luffy',
+        game: 'one_piece',
+        price: 67.25,
+        timestamp: '2024-01-14T11:30:00Z',
+        seller: 'OnePieceCards',
+        buyer: 'PirateKingFan',
+      },
+      {
+        id: 'activity4',
+        type: 'listing',
+        cardName: 'Gundam Barbatos',
+        game: 'gundam',
+        price: 89.99,
+        timestamp: '2024-01-14T08:15:00Z',
+        seller: 'GundamElite',
+      },
+      {
+        id: 'activity5',
+        type: 'sale',
+        cardName: 'Tanjiro Kamado',
+        game: 'union_arena',
+        price: 43.20,
+        timestamp: '2024-01-13T19:45:00Z',
+        seller: 'UnionArenaShop',
+        buyer: 'DemonSlayerFan',
+      },
+      {
+        id: 'activity6',
+        type: 'listing',
+        cardName: 'Son Goku, Ultra Instinct',
+        game: 'dragon_ball_fusion',
+        price: 278.50,
+        timestamp: '2024-01-13T14:20:00Z',
+        seller: 'DragonBallSuper',
       },
     ];
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
+import { formatPrice } from "@/lib/utils";
 import {
   Carousel,
   CarouselContent,
@@ -23,96 +24,53 @@ export const HeroCarousel = () => {
   useEffect(() => {
     const loadFeaturedCards = async () => {
       try {
-        console.log('🎯 Loading featured cards from backend API (with S3 cached images)');
+        console.log('🎯 Loading featured cards from API_TCG services');
         
-        // Use backend API which has S3 caching and proper CORS
-        const trendingCards = await backendAPIService.getTrendingCards(6);
+        const allCards = [];
         
-        if (trendingCards.length > 0) {
-          setCards(trendingCards);
-        } else {
-          // Use mock data with actual card images from public URLs (temporary solution)
-          console.log('🔄 Using fallback mock cards with images');
-          setCards([
-            {
-              id: '1',
-              name: 'Charizard',
-              game: 'pokemon',
-              price: 299.99,
-              image: 'https://images.pokemontcg.io/base1/4_hires.png',
-              condition: 'mint',
-              rarity: 'Holo Rare'
-            },
-            {
-              id: '2', 
-              name: 'Black Lotus',
-              game: 'magic',
-              price: 1899.99,
-              image: 'https://cards.scryfall.io/normal/front/b/d/bd8fa327-dd41-4737-8f19-2cf5eb1f7cdd.jpg',
-              condition: 'near-mint',
-              rarity: 'Mythic Rare'
-            },
-            {
-              id: '3',
-              name: 'Blue-Eyes White Dragon',
-              game: 'yu-gi-oh',
-              price: 189.99,
-              image: 'https://images.ygoprodeck.com/images/cards/89631139.jpg',
-              condition: 'mint',
-              rarity: 'Ultra Rare'
-            },
-            {
-              id: '4',
-              name: 'Monkey D. Luffy',
-              game: 'one_piece',
-              price: 249.99,
-              image: 'https://limitlesstcg.nyc3.digitaloceanspaces.com/one-piece/OP01/EN/OP01-003.png',
-              condition: 'mint',
-              rarity: 'Secret Rare'
-            },
-            {
-              id: '5',
-              name: 'Vegeta',
-              game: 'dragon_ball_fusion',
-              price: 179.99,
-              image: 'https://www.dbs-cardgame.com/us-en/cardlist/images/series1/BT1-111.png',
-              condition: 'near-mint',
-              rarity: 'Super Rare'
-            },
-            {
-              id: '6',
-              name: 'Agumon',
-              game: 'digimon',
-              price: 89.99,
-              image: 'https://images.digimoncard.io/images/cards/BT1-010.jpg',
-              condition: 'mint',
-              rarity: 'Rare'
+        // Fetch cards from different games using our API route (handles all games)
+        const games = ['pokemon', 'yu-gi-oh', 'magic', 'one_piece', 'dragon_ball_fusion', 'digimon', 'gundam', 'union_arena', 'star_wars'] as const;
+        
+        // Randomly shuffle games and select 4 for variety (including traditional and modern games)
+        const shuffledGames = [...games].sort(() => Math.random() - 0.5);
+        
+        for (const game of shuffledGames.slice(0, 4)) { // Randomly select 4 games for more variety
+          try {
+            const response = await fetch(`/api/cards?game=${game}&limit=5`);
+            
+            if (!response.ok) {
+              throw new Error(`Failed to fetch ${game} cards: ${response.status}`);
             }
-          ]);
+            
+            const data = await response.json();
+            const cards = data.cards || [];
+            
+            // Randomly select 2 cards from the fetched cards
+            const shuffledCards = [...cards].sort(() => Math.random() - 0.5);
+            allCards.push(...shuffledCards.slice(0, 2));
+          } catch (error) {
+            console.log(`❌ Failed to fetch ${game} cards:`, error);
+          }
+        }
+        
+        if (allCards.length > 0) {
+          // Map to our expected format
+          const formattedCards = allCards.map((card) => ({
+            id: card.id,
+            name: card.name,
+            game: card.game,
+            price: card.price, // Will be 0 from API_TCG, hidden by conditional display
+            image: card.image || undefined,
+            condition: 'mint' as const,
+            rarity: card.rarity || 'Common'
+          }));
+          setCards(formattedCards);
+        } else {
+          setCards([]); // No cards available
         }
       } catch (error) {
         console.error('❌ Failed to load featured cards:', error);
-        // Use fallback mock data with images
-        setCards([
-          {
-            id: '1',
-            name: 'Charizard',
-            game: 'pokemon',
-            price: 299.99,
-            image: 'https://images.pokemontcg.io/base1/4_hires.png',
-            condition: 'mint',
-            rarity: 'Holo Rare'
-          },
-          {
-            id: '2',
-            name: 'Black Lotus',
-            game: 'magic',
-            price: 1899.99,
-            image: 'https://cards.scryfall.io/normal/front/b/d/bd8fa327-dd41-4737-8f19-2cf5eb1f7cdd.jpg',
-            condition: 'near-mint',
-            rarity: 'Mythic Rare'
-          }
-        ]);
+        setCards([]);
       } finally {
         setLoading(false);
       }
@@ -178,7 +136,9 @@ export const HeroCarousel = () => {
                       <h3 className="text-lg font-bold text-foreground">{card.name}</h3>
                       <div className="flex items-center justify-between">
                         <p className="text-sm text-accent">{card.rarity || 'Common'}</p>
-                        <p className="text-sm font-semibold text-white border border-white/30 bg-black/20 backdrop-blur-sm px-2 py-1 rounded-md">${card.price}</p>
+                        {typeof card.price === 'number' && card.price > 0 && (
+                          <p className="text-sm font-semibold text-white border border-white/30 bg-black/20 backdrop-blur-sm px-2 py-1 rounded-md">{formatPrice(card.price)}</p>
+                        )}
                       </div>
                     </div>
                   </div>

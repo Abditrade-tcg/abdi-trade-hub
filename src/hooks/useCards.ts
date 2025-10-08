@@ -121,14 +121,52 @@ export function useCards(options: UseCardsOptions = {}): UseCardsReturn {
       setLoading(true);
       setError(null);
       
-      console.log('🎯 Loading cards from backend API (with S3 cached images)');
+      console.log('🎯 Loading cards from API_TCG services');
       
-      // Use backend API which handles S3 caching and TCG API integration server-side
-      const canonicalCards = await backendAPIService.getTrendingCards(limit);
+      const allCards = [];
       
-      if (canonicalCards.length === 0) {
-        throw new Error('No cards returned from API');
+      // Fetch cards from different games using our API route (handles all games)
+      const games = ['pokemon', 'yu-gi-oh', 'magic', 'one_piece', 'dragon_ball_fusion', 'digimon', 'gundam', 'union_arena', 'star_wars'] as const;
+      
+      // Randomly shuffle games for variety each time
+      const shuffledGames = [...games].sort(() => Math.random() - 0.5);
+      
+      for (const game of shuffledGames) {
+        try {
+          const cardsPerGame = Math.ceil(limit / games.length);
+          
+          const response = await fetch(`/api/cards?game=${game}&limit=${cardsPerGame * 2}`);
+          
+          if (!response.ok) {
+            throw new Error(`Failed to fetch ${game} cards: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          const cards = data.cards || [];
+          
+          // Randomly select cards from the fetched results
+          const shuffledCards = [...cards].sort(() => Math.random() - 0.5);
+          allCards.push(...shuffledCards.slice(0, cardsPerGame));
+        } catch (error) {
+          console.log(`❌ Failed to fetch ${game} cards:`, error);
+        }
       }
+      
+      if (allCards.length === 0) {
+        throw new Error('No cards returned from API_TCG');
+      }
+      
+      // Convert cardDataService format to canonical format
+      const canonicalCards = allCards.map(card => ({
+        id: card.id,
+        name: card.name,
+        game: card.game,
+        price: card.price || 0, // API_TCG returns 0 for price
+        image: card.image,
+        rarity: card.rarity || 'Common',
+        condition: 'mint' as const,
+        set: card.set
+      }));
       
       const displayCards = canonicalCards.map(convertToDisplayCard);
       setCards(displayCards);
@@ -137,8 +175,8 @@ export function useCards(options: UseCardsOptions = {}): UseCardsReturn {
       console.error('Failed to fetch cards:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch cards');
       
-      // Fallback to mock data
-      setCards(getMockCards(limit));
+      // Return empty array for production
+      setCards([]);
     } finally {
       setLoading(false);
     }
