@@ -8,10 +8,13 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
+  type CarouselApi,
 } from '@/components/ui/carousel';
 import { Button } from '@/components/ui/button';
 import { isFeatureEnabled } from '@/config/environmentManager';
+import { backendAPIService } from '@/services/backendAPIService';
 import Link from 'next/link';
+import Autoplay from 'embla-carousel-autoplay';
 
 interface FeaturedCard {
   id: string;
@@ -25,129 +28,38 @@ interface FeaturedCard {
 export function HeroCarousel() {
   const [featuredCards, setFeaturedCards] = useState<FeaturedCard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [api, setApi] = useState<CarouselApi>();
 
   useEffect(() => {
     const loadFeaturedCards = async () => {
       try {
         if (isFeatureEnabled('enableBackendAPI')) {
-          // TODO: Load real featured cards from backend API
-          // For now, use enhanced fallback data
-          setFeaturedCards([
-            {
-              id: '1',
-              name: 'Black Lotus',
-              price: 25000,
-              image: '/placeholder-card.jpg',
-              rarity: 'Rare',
-              set: 'Alpha'
-            },
-            {
-              id: '2', 
-              name: 'Charizard Base Set',
-              price: 15000,
-              image: '/placeholder-card.jpg',
-              rarity: 'Holo Rare',
-              set: 'Base Set'
-            },
-            {
-              id: '3',
-              name: 'Blue-Eyes White Dragon',
-              price: 8000,
-              image: '/placeholder-card.jpg',
-              rarity: 'Ultra Rare',
-              set: 'LOB'
-            },
-            {
-              id: '4',
-              name: 'Pikachu Illustrator',
-              price: 35000,
-              image: '/placeholder-card.jpg',
-              rarity: 'Promo',
-              set: 'Promo'
-            },
-            {
-              id: '5',
-              name: 'Time Walk',
-              price: 12000,
-              image: '/placeholder-card.jpg',
-              rarity: 'Rare',
-              set: 'Alpha'
-            },
-            {
-              id: '6',
-              name: 'Shadowless Charizard',
-              price: 18000,
-              image: '/placeholder-card.jpg',
-              rarity: 'Holo Rare',
-              set: 'Base Set'
-            }
-          ]);
+          // Load real featured cards from backend API
+          const cards = await backendAPIService.searchCards({
+            sort: { field: 'popularity', order: 'desc' },
+            limit: 6
+          });
+          
+          if (cards && cards.length > 0) {
+            setFeaturedCards(cards.map(card => ({
+              id: card.id,
+              name: card.name,
+              price: card.price || 0,
+              image: card.image,
+              rarity: card.rarity,
+              set: card.set
+            })));
+          } else {
+            // Use fallback if no cards returned
+            setFallbackCards();
+          }
         } else {
-          // Fallback featured cards for development
-          setFeaturedCards([
-            {
-              id: '1',
-              name: 'Black Lotus',
-              price: 25000,
-              image: '/placeholder-card.jpg',
-              rarity: 'Rare',
-              set: 'Alpha'
-            },
-            {
-              id: '2', 
-              name: 'Charizard Base Set',
-              price: 15000,
-              image: '/placeholder-card.jpg',
-              rarity: 'Holo Rare',
-              set: 'Base Set'
-            },
-            {
-              id: '3',
-              name: 'Blue-Eyes White Dragon',
-              price: 8000,
-              image: '/placeholder-card.jpg',
-              rarity: 'Ultra Rare',
-              set: 'LOB'
-            },
-            {
-              id: '4',
-              name: 'Pikachu Illustrator',
-              price: 35000,
-              image: '/placeholder-card.jpg',
-              rarity: 'Promo',
-              set: 'Promo'
-            },
-            {
-              id: '5',
-              name: 'Time Walk',
-              price: 12000,
-              image: '/placeholder-card.jpg',
-              rarity: 'Rare',
-              set: 'Alpha'
-            },
-            {
-              id: '6',
-              name: 'Shadowless Charizard',
-              price: 18000,
-              image: '/placeholder-card.jpg',
-              rarity: 'Holo Rare',
-              set: 'Base Set'
-            }
-          ]);
+          // Use fallback for development
+          setFallbackCards();
         }
       } catch (error) {
         console.error('Error loading featured cards:', error);
-        // Use fallback data on error
-        setFeaturedCards([
-          {
-            id: '1',
-            name: 'Featured Card',
-            price: 1000,
-            image: '/placeholder-card.jpg',
-            rarity: 'Rare',
-            set: 'Premium'
-          }
-        ]);
+        setFallbackCards();
       } finally {
         setLoading(false);
       }
@@ -155,6 +67,59 @@ export function HeroCarousel() {
 
     loadFeaturedCards();
   }, []);
+
+  const setFallbackCards = () => {
+    setFeaturedCards([
+      {
+        id: '1',
+        name: 'Black Lotus',
+        price: 25000,
+        rarity: 'Rare',
+        set: 'Alpha',
+        image: 'https://cards.scryfall.io/large/front/b/d/bd8fa327-dd41-4737-8f19-2cf5eb1f7cdd.jpg'
+      },
+      {
+        id: '2', 
+        name: 'Charizard Base Set',
+        price: 15000,
+        rarity: 'Holo Rare',
+        set: 'Base Set',
+        image: 'https://images.pokemontcg.io/base1/4_hires.png'
+      },
+      {
+        id: '3',
+        name: 'Blue-Eyes White Dragon',
+        price: 8000,
+        rarity: 'Ultra Rare',
+        set: 'LOB',
+        image: 'https://images.ygoprodeck.com/images/cards/89631139.jpg'
+      },
+      {
+        id: '4',
+        name: 'Pikachu Illustrator',
+        price: 35000,
+        rarity: 'Promo',
+        set: 'Promo',
+        image: 'https://images.pokemontcg.io/promo/39_hires.png'
+      },
+      {
+        id: '5',
+        name: 'Time Walk',
+        price: 12000,
+        rarity: 'Rare',
+        set: 'Alpha',
+        image: 'https://cards.scryfall.io/large/front/7/0/70901356-3266-4bd9-aacc-f06c27271de5.jpg'
+      },
+      {
+        id: '6',
+        name: 'Shadowless Charizard',
+        price: 18000,
+        rarity: 'Holo Rare',
+        set: 'Base Set',
+        image: 'https://images.pokemontcg.io/base1/4_hires.png'
+      }
+    ]);
+  };
 
   if (loading) {
     return (
@@ -170,51 +135,68 @@ export function HeroCarousel() {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <Carousel className="w-full">
+      <Carousel 
+        className="w-full"
+        plugins={[
+          Autoplay({
+            delay: 3000,
+            stopOnInteraction: true,
+          }),
+        ]}
+        setApi={setApi}
+      >
         <CarouselContent>
           {featuredCards.map((card) => (
             <CarouselItem key={card.id}>
-              <Card className="border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-xl hover:scale-105">
-                <CardContent className="p-6">
-                  <div className="aspect-[3/4] bg-muted rounded-lg mb-4 overflow-hidden">
-                    {card.image ? (
-                      <img
-                        src={card.image}
-                        alt={card.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.src = '/placeholder-card.jpg';
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10">
-                        <div className="text-center p-4">
-                          <div className="text-2xl font-bold text-primary mb-2">{card.name}</div>
-                          <div className="text-sm text-muted-foreground">{card.set}</div>
-                        </div>
+              <div className="relative group">
+                {/* Card Image Background */}
+                <div className="aspect-[3/4] rounded-2xl overflow-hidden relative">
+                  {card.image ? (
+                    <img 
+                      src={card.image} 
+                      alt={card.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Fallback to gradient if image fails to load
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                  ) : null}
+                  <div className={`absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 ${card.image ? 'hidden' : ''}`}>
+                    <div className="flex items-center justify-center h-full text-center p-4">
+                      <div>
+                        <div className="text-2xl font-bold text-white mb-2">{card.name}</div>
+                        <div className="text-sm text-white/80">{card.set}</div>
+                        <div className="text-lg font-bold text-white mt-4">${card.price.toLocaleString()}</div>
                       </div>
-                    )}
-                  </div>
-                  <div className="text-center space-y-2">
-                    <h3 className="font-semibold text-lg truncate">{card.name}</h3>
-                    <div className="flex justify-between items-center text-sm text-muted-foreground">
-                      <span>{card.rarity}</span>
-                      <span>{card.set}</span>
                     </div>
-                    <div className="text-2xl font-bold text-primary">
-                      ${card.price.toLocaleString()}
-                    </div>
-                    <Button 
-                      className="w-full mt-3 transition-all duration-300 hover:scale-105"
-                      asChild
-                    >
-                      <Link href={`/marketplace/card/${card.id}`}>
-                        View Details
-                      </Link>
-                    </Button>
                   </div>
-                </CardContent>
-              </Card>
+                  
+                  {/* Glass overlay for card info */}
+                  <div className="absolute inset-x-0 bottom-0 bg-black/20 backdrop-blur-md border-t border-white/10">
+                    <div className="p-4 text-white">
+                      <h3 className="font-bold text-lg mb-1 truncate">{card.name}</h3>
+                      <div className="flex justify-between items-center text-sm mb-2">
+                        <span className="text-yellow-400">{card.rarity}</span>
+                        <span className="text-white/80">{card.set}</span>
+                      </div>
+                      <div className="text-xl font-bold text-green-400 mb-3">
+                        ${card.price.toLocaleString()}
+                      </div>
+                      <Button 
+                        size="sm"
+                        className="w-full bg-primary/80 hover:bg-primary backdrop-blur-sm transition-all duration-300 hover:scale-105 border-white/20"
+                        asChild
+                      >
+                        <Link href={`/marketplace/card/${card.id}`}>
+                          View Details
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </CarouselItem>
           ))}
         </CarouselContent>

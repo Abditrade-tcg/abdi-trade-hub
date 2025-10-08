@@ -4,31 +4,39 @@ import { DynamoDBAdapter } from '@next-auth/dynamodb-adapter';
 import { DynamoDB } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
 
-const config = {
+// Check if AWS credentials are configured
+const hasAWSCredentials = 
+  process.env.AWS_ACCESS_KEY_ID && 
+  process.env.AWS_SECRET_ACCESS_KEY && 
+  process.env.NEXT_PUBLIC_AWS_REGION;
+
+const config = hasAWSCredentials ? {
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
   },
   region: process.env.NEXT_PUBLIC_AWS_REGION!,
-};
+} : undefined;
 
-const client = DynamoDBDocument.from(new DynamoDB(config), {
+const client = config ? DynamoDBDocument.from(new DynamoDB(config), {
   marshallOptions: {
     convertEmptyValues: true,
     removeUndefinedValues: true,
     convertClassInstanceToMap: true,
   },
-});
+}) : undefined;
 
 export const authOptions: NextAuthOptions = {
-  adapter: DynamoDBAdapter(client),
+  adapter: client ? DynamoDBAdapter(client) : undefined,
   providers: [
-    CognitoProvider({
-      clientId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID!,
-      clientSecret: process.env.COGNITO_CLIENT_SECRET!,
-      issuer: `https://cognito-idp.${process.env.NEXT_PUBLIC_COGNITO_REGION}.amazonaws.com/${process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID}`,
-      checks: ['pkce', 'state'],
-    }),
+    ...(process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID && process.env.COGNITO_CLIENT_SECRET ? [
+      CognitoProvider({
+        clientId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID!,
+        clientSecret: process.env.COGNITO_CLIENT_SECRET!,
+        issuer: `https://cognito-idp.${process.env.NEXT_PUBLIC_COGNITO_REGION || 'us-east-1'}.amazonaws.com/${process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID}`,
+        checks: ['pkce', 'state'],
+      }),
+    ] : []),
   ],
   session: {
     strategy: 'jwt',
@@ -69,6 +77,10 @@ declare module 'next-auth' {
     accessToken?: string;
     userId?: string;
     username?: string;
+  }
+
+  interface Profile {
+    preferred_username?: string;
   }
 }
 

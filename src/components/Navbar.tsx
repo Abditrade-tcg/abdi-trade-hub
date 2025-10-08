@@ -7,18 +7,26 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Menu, Search, ShoppingCart, Bell, User, Settings } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useSession, signOut } from "next-auth/react";
+// import { useSession, signOut } from "next-auth/react";
 import { ThemeToggle } from "./ThemeToggle";
 import { useCart } from "@/contexts/CartContext";
 import { userManagementService, type UserProfile } from "@/services/userManagementService";
 
 const Navbar = () => {
-  const { data: session, status } = useSession() || { data: null, status: 'loading' };
+  // All hooks must be called at the top level
+  // Temporarily disable next-auth until we fix the webpack issue
+  const session = null;
+  const status = 'unauthenticated';
+  // const { data: session, status } = useSession();
   const { cartCount } = useCart();
+  const [mounted, setMounted] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [showAdminNav, setShowAdminNav] = useState(false);
-  const notificationCount = 5; // Mock notification count
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Load user profile and check admin permissions
   useEffect(() => {
@@ -61,8 +69,28 @@ const Navbar = () => {
     loadUserProfile();
   }, [status, session]);
 
+  // Don't render auth-dependent parts until mounted
+  if (!mounted) {
+    return (
+      <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-14 items-center">
+          <div className="mr-4 hidden md:flex">
+            <Link href="/" className="mr-6 flex items-center space-x-2">
+              <Image src="/abditrade-logo-new.png" alt="AbdiTrade" width={32} height={32} />
+              <span className="hidden font-bold sm:inline-block">AbdiTrade</span>
+            </Link>
+          </div>
+        </div>
+      </nav>
+    );
+  }
+  
+  const notificationCount = 5; // Mock notification count
+
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: '/' });
+    // Temporarily disabled until next-auth webpack issue is fixed
+    // await signOut({ callbackUrl: '/' });
+    console.log('Sign out clicked - auth temporarily disabled');
   };
 
   return (

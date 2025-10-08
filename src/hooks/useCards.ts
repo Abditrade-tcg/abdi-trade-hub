@@ -2,7 +2,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { apiService } from '@/services/api';
+import { backendAPIService } from '@/services/backendAPIService';
+import { cardDataService } from '@/services/cardDataService';
 import { CanonicalCard, DisplayCard } from '@/types/card';
 
 interface UseCardsOptions {
@@ -60,15 +61,20 @@ export function useCards(options: UseCardsOptions = {}): UseCardsReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const convertToDisplayCard = (canonicalCard: CanonicalCard): DisplayCard => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const convertToDisplayCard = (canonicalCard: any): DisplayCard => {
     const game = canonicalCard.game || canonicalCard.provider;
     const gameShort = gameMapping[game] || gameMapping[canonicalCard.provider] || 'TCG';
     
-    // Format pricing
+    // Format pricing - handle both formats
     let price = '$0.00';
     let trend = '+0%';
     
-    if (canonicalCard.pricing?.market) {
+    if (canonicalCard.price) {
+      // Simple price format from backend API
+      price = `$${canonicalCard.price.toFixed(2)}`;
+    } else if (canonicalCard.pricing?.market) {
+      // Complex pricing format
       price = `$${canonicalCard.pricing.market.toFixed(2)}`;
     } else if (canonicalCard.abditradeSignals?.avgSalePrice) {
       price = `$${canonicalCard.abditradeSignals.avgSalePrice.toFixed(2)}`;
@@ -104,7 +110,7 @@ export function useCards(options: UseCardsOptions = {}): UseCardsReturn {
       rarity: rarityMapping[canonicalCard.rarity?.toLowerCase() || 'common'] || 'Common',
       price,
       trend,
-      image: canonicalCard.images.large || canonicalCard.images.small || canonicalCard.images.local || '',
+      image: canonicalCard.image || canonicalCard.images?.large || canonicalCard.images?.small || canonicalCard.images?.local || '',
       set: canonicalCard.set,
       condition: 'Near Mint'
     };
@@ -115,8 +121,10 @@ export function useCards(options: UseCardsOptions = {}): UseCardsReturn {
       setLoading(true);
       setError(null);
       
-      // Try to get featured cards from the API
-      const canonicalCards = await apiService.getFeaturedCards(limit);
+      console.log('🎯 Loading cards from backend API (with S3 cached images)');
+      
+      // Use backend API which handles S3 caching and TCG API integration server-side
+      const canonicalCards = await backendAPIService.getTrendingCards(limit);
       
       if (canonicalCards.length === 0) {
         throw new Error('No cards returned from API');
@@ -173,7 +181,7 @@ function getMockCards(limit: number): DisplayCard[] {
       rarity: 'Ultra Rare',
       price: '$124.99',
       trend: '+18%',
-      image: 'https://images.unsplash.com/photo-1606665028317-2b60f23a8cf7?w=500&q=80',
+      image: 'https://images.pokemontcg.io/base1/4_hires.png',
     },
     {
       id: 'mock-blue-eyes',
@@ -183,7 +191,7 @@ function getMockCards(limit: number): DisplayCard[] {
       rarity: 'Secret Rare',
       price: '$89.50',
       trend: '+12%',
-      image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&q=80',
+      image: 'https://images.ygoprodeck.com/images/cards/89631139.jpg',
     },
     {
       id: 'mock-luffy',
@@ -193,7 +201,7 @@ function getMockCards(limit: number): DisplayCard[] {
       rarity: 'Super Rare',
       price: '$67.25',
       trend: '+25%',
-      image: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=500&q=80',
+      image: 'https://limitlesstcg.nyc3.digitaloceanspaces.com/one-piece/OP01/EN/OP01-003.png',
     },
     {
       id: 'mock-goku',
@@ -203,7 +211,7 @@ function getMockCards(limit: number): DisplayCard[] {
       rarity: 'Legendary',
       price: '$156.00',
       trend: '+8%',
-      image: 'https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?w=500&q=80',
+      image: 'https://www.dbs-cardgame.com/us-en/cardlist/images/series1/BT1-111.png',
     },
     {
       id: 'mock-omnimon',
@@ -213,7 +221,7 @@ function getMockCards(limit: number): DisplayCard[] {
       rarity: 'Secret Rare',
       price: '$95.75',
       trend: '+15%',
-      image: 'https://images.unsplash.com/photo-1606663889134-b1dedb5ed8b7?w=500&q=80',
+      image: 'https://images.digimoncard.io/images/cards/BT1-010.jpg',
     },
     {
       id: 'mock-gundam',
@@ -223,7 +231,7 @@ function getMockCards(limit: number): DisplayCard[] {
       rarity: 'Rare',
       price: '$45.99',
       trend: '+6%',
-      image: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=500&q=80',
+      image: '/placeholder.svg',
     },
     {
       id: 'mock-darth',
@@ -233,7 +241,7 @@ function getMockCards(limit: number): DisplayCard[] {
       rarity: 'Legendary',
       price: '$198.50',
       trend: '+22%',
-      image: 'https://images.unsplash.com/photo-1601814933824-fd0b574dd592?w=500&q=80',
+      image: '/placeholder.svg',
     },
     {
       id: 'mock-black-lotus',
@@ -243,7 +251,7 @@ function getMockCards(limit: number): DisplayCard[] {
       rarity: 'Mythic Rare',
       price: '$12,500.00',
       trend: '+3%',
-      image: 'https://images.unsplash.com/photo-1613771404721-1f92d799e49f?w=500&q=80',
+      image: 'https://cards.scryfall.io/normal/front/b/d/bd8fa327-dd41-4737-8f19-2cf5eb1f7cdd.jpg',
     }
   ];
 
