@@ -1,13 +1,9 @@
-import type React from "react"
 import type { Metadata } from "next"
+import { Inter } from "next/font/google"
 import "./globals.css"
-import { Toaster } from "@/components/ui/toaster"
-import { Toaster as Sonner } from "@/components/ui/sonner"
-import { TooltipProvider } from "@/components/ui/tooltip"
-import { ThemeProvider } from "next-themes"
-import { CartProvider } from "@/contexts/CartContext"
-import { Suspense } from "react"
-import { SessionProvider } from "next-auth/react"
+import Providers from "@/components/Providers"
+
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "AbdiTrade - Premium Trading Card Marketplace",
@@ -31,20 +27,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="font-sans">
-        <SessionProvider>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <TooltipProvider>
-              <CartProvider>
-                <Suspense fallback={null}>
-                  {children}
-                  <Toaster />
-                  <Sonner />
-                </Suspense>
-              </CartProvider>
-            </TooltipProvider>
-          </ThemeProvider>
-        </SessionProvider>
+      <body className={inter.className}>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   )

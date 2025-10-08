@@ -1,4 +1,4 @@
-import { config } from '@/config';
+import { getConfig } from '@/config/environmentManager';
 import { CanonicalCard, MarketplaceActivity } from '@/types';
 import { withRetry, withCircuitBreaker } from './awsErrorHandler';
 
@@ -165,7 +165,8 @@ class BackendAPIService {
   private apiKey: string | null = null;
 
   constructor() {
-    this.baseURL = config.apiUrl;
+    const config = getConfig();
+    this.baseURL = config.api.backendUrl;
     
     // Set API key if available
     if (typeof window !== 'undefined') {
@@ -311,7 +312,8 @@ class BackendAPIService {
     try {
       console.log('📈 Getting trending cards from backend');
       
-      const endpoint = `/v1/cards/trending?limit=${limit}`;
+      // Use search endpoint with popularity sorting for trending cards
+      const endpoint = `/v1/cards/search?game=pokemon&limit=${limit}&sortBy=popularity&sortOrder=desc`;
       const response = await this.makeRequest<CanonicalCard[]>(endpoint);
       
       return response.data || [];
@@ -487,6 +489,69 @@ class BackendAPIService {
         priceHistory: [
           { date: '2024-01-01', price: 120.00 },
           { date: '2024-01-10', price: 125.00 },
+        ],
+      },
+      {
+        id: 'magic-lightning-bolt',
+        name: 'Lightning Bolt',
+        game: 'magic',
+        price: 1.01,
+        image: 'https://cards.scryfall.io/normal/front/7/7/77c6fa74-5543-42ac-9ead-0e890b188e99.jpg?1706239968',
+        condition: 'near-mint',
+        rarity: 'uncommon',
+        set: 'Ravnica: Clue Edition',
+        seller: {
+          id: 'seller3',
+          name: 'MagicMart',
+          rating: 4.7,
+          sales: 1543,
+        },
+        lastSold: '2024-01-12T09:15:00Z',
+        priceHistory: [
+          { date: '2024-01-01', price: 0.95 },
+          { date: '2024-01-12', price: 1.01 },
+        ],
+      },
+      {
+        id: 'magic-black-lotus',
+        name: 'Black Lotus',
+        game: 'magic',
+        price: 12500.00,
+        image: 'https://cards.scryfall.io/normal/front/b/d/bd8fa327-dd41-4737-8f19-2cf5eb1f7cdd.jpg',
+        condition: 'near-mint',
+        rarity: 'mythic rare',
+        set: 'Alpha',
+        seller: {
+          id: 'seller4',
+          name: 'VintageCards',
+          rating: 4.9,
+          sales: 234,
+        },
+        lastSold: '2024-01-08T16:45:00Z',
+        priceHistory: [
+          { date: '2024-01-01', price: 12200.00 },
+          { date: '2024-01-08', price: 12500.00 },
+        ],
+      },
+      {
+        id: 'onepiece-luffy-op01',
+        name: 'Monkey D. Luffy',
+        game: 'one_piece',
+        price: 67.25,
+        image: 'https://limitlesstcg.nyc3.digitaloceanspaces.com/one-piece/OP01/EN/OP01-003.png',
+        condition: 'mint',
+        rarity: 'Super Rare',
+        set: 'Romance Dawn',
+        seller: {
+          id: 'seller5',
+          name: 'OnePieceCards',
+          rating: 4.6,
+          sales: 678,
+        },
+        lastSold: '2024-01-14T11:30:00Z',
+        priceHistory: [
+          { date: '2024-01-01', price: 65.00 },
+          { date: '2024-01-14', price: 67.25 },
         ],
       },
     ];

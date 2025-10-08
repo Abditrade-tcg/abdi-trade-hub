@@ -61,6 +61,7 @@ interface AppConfig {
     };
     apiTcg: {
       baseUrl: string;
+      apiKey: string;
     };
   };
   
@@ -172,6 +173,7 @@ export const config: AppConfig = {
     },
     apiTcg: {
       baseUrl: getEnvVar('API_TCG_URL', 'https://apitcg.com/api'),
+      apiKey: getEnvVar('API_TCG_KEY', ''),
     },
   },
   

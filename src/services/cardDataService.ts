@@ -6,6 +6,7 @@ import { ScryfallCard, ApiTcgCard } from '@/types';
 interface ApiTcgResponse extends ApiTcgCard {
   market_price?: number;
   rarity: string;
+  code?: string; // Card code from APITCG (e.g., "OP03-070")
 }
 
 interface CachedCardData {
@@ -429,33 +430,47 @@ class CardDataService {
 
   /**
    * API TCG integration for One Piece, Gundam, Dragon Ball, etc.
+   * Updated to match official APITCG documentation format
    */
   private async fetchApiTcgCards(params: CardSearchParams): Promise<CardData[]> {
     const { game, query, limit = 20 } = params;
     
     // Convert game name to API TCG endpoint format
     const gameEndpoint = this.getApiTcgGameEndpoint(game);
-    const apiUrl = `${config.cardApis.apiTcg.baseUrl}/${gameEndpoint}/cards`;
+    // Use the correct APITCG URL format: https://apitcg.com/api/[tcg]/cards
+    const apiUrl = `https://apitcg.com/api/${gameEndpoint}/cards`;
     
+    // APITCG uses property-value pairs for searching (e.g., ?name=luffy)
     const searchParams = new URLSearchParams({
-      name: query, // API TCG uses 'name' parameter for searching
+      name: query, // Search by name property
     });
 
-    const response = await fetch(`${apiUrl}?${searchParams}`);
+    console.log(`🌐 Fetching APITCG cards from: ${apiUrl}?${searchParams}`);
+    
+    // Add API key header if available
+    const headers: Record<string, string> = {};
+    if (config.cardApis.apiTcg.apiKey) {
+      headers['x-api-key'] = config.cardApis.apiTcg.apiKey;
+    }
+    
+    const response = await fetch(`${apiUrl}?${searchParams}`, { headers });
     if (!response.ok) {
-      throw new Error(`API TCG error: ${response.status}`);
+      throw new Error(`APITCG ${gameEndpoint} API error: ${response.status}`);
     }
 
     const result = await response.json();
     const cards = result.data || [];
     
-    // Apply limit client-side since API doesn't support limit parameter
+    console.log(`✅ APITCG returned ${cards.length} cards for ${gameEndpoint}`);
+    
+    // Apply limit client-side and map to our CardData format
     return cards.slice(0, limit).map((card: ApiTcgResponse) => ({
-      id: card.id,
+      id: card.id || card.code,
       name: card.name,
       game: game,
+      // Use correct APITCG image field mapping: images.large or images.small
       image: card.images?.large || card.images?.small,
-      price: 0, // API TCG doesn't provide market price
+      price: 0, // APITCG doesn't provide market price in standard response
       rarity: card.rarity,
       set: card.set?.name,
       ...card
@@ -464,32 +479,46 @@ class CardDataService {
 
   private async fetchApiTcgCardById(game: string, cardId: string): Promise<CardData | null> {
     const gameEndpoint = this.getApiTcgGameEndpoint(game);
-    const apiUrl = `${config.cardApis.apiTcg.baseUrl}/${gameEndpoint}/cards`;
+    // Use the correct APITCG URL format: https://apitcg.com/api/[tcg]/cards
+    const apiUrl = `https://apitcg.com/api/${gameEndpoint}/cards`;
     
+    // Search by ID property using APITCG format
     const searchParams = new URLSearchParams({
       id: cardId,
     });
 
-    const response = await fetch(`${apiUrl}?${searchParams}`);
+    console.log(`🌐 Fetching APITCG card by ID from: ${apiUrl}?${searchParams}`);
+
+    // Add API key header if available
+    const headers: Record<string, string> = {};
+    if (config.cardApis.apiTcg.apiKey) {
+      headers['x-api-key'] = config.cardApis.apiTcg.apiKey;
+    }
+
+    const response = await fetch(`${apiUrl}?${searchParams}`, { headers });
     if (!response.ok) {
       if (response.status === 404) {
         return null;
       }
-      throw new Error(`API TCG error: ${response.status}`);
+      throw new Error(`APITCG ${gameEndpoint} API error: ${response.status}`);
     }
 
     const result = await response.json();
     const cards = result.data || [];
-    const card = cards.find((c: ApiTcgResponse) => c.id === cardId);
+    // Find the card by ID or code
+    const card = cards.find((c: ApiTcgResponse) => c.id === cardId || c.code === cardId);
     
     if (!card) return null;
 
+    console.log(`✅ APITCG found card: ${card.name}`);
+
     return {
-      id: card.id,
+      id: card.id || card.code,
       name: card.name,
       game: game as CardData['game'],
+      // Use correct APITCG image field mapping: images.large or images.small
       image: card.images?.large || card.images?.small,
-      price: 0, // API TCG doesn't provide market price
+      price: 0, // APITCG doesn't provide market price in standard response
       rarity: card.rarity,
       set: card.set?.name,
       ...card

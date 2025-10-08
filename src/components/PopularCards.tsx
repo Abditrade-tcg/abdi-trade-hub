@@ -63,49 +63,35 @@ const PopularCards = () => {
           {cards.map((card, index) => (
             <Card
               key={card.id}
-              className="group overflow-hidden bg-card border-border hover:border-primary/50 hover:scale-105 hover:shadow-2xl hover:shadow-yellow-400/40 hover:ring-2 hover:ring-yellow-400/30 transition-all duration-300 animate-fade-in cursor-pointer"
+              className="border-2 border-primary/20 bg-card/50 backdrop-blur-sm overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-2xl animate-fade-in cursor-pointer"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <div className="relative overflow-hidden">
-                <Image
-                  src={card.image || 'https://images.unsplash.com/photo-1606665028317-2b60f23a8cf7?w=500&q=80'}
-                  alt={card.name}
-                  width={400}
-                  height={256}
-                  className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
-                  onError={(e) => {
-                    // Fallback image on error
-                    e.currentTarget.src = 'https://images.unsplash.com/photo-1606665028317-2b60f23a8cf7?w=500&q=80';
-                  }}
-                />
-                {/* Game Identifier Badge */}
-                <div className="absolute top-3 left-3 px-2 py-1 rounded-md bg-gradient-to-r from-primary to-accent text-white text-xs font-bold shadow-lg">
-                  {card.gameShort}
-                </div>
-                <button className="absolute top-3 right-3 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-primary/20 transition-colors">
-                  <Heart className="w-5 h-5" />
-                </button>
-                <div className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-background/80 backdrop-blur-sm flex items-center gap-1 text-sm">
-                  <TrendingUp className="w-4 h-4 text-accent" />
-                  <span className="text-accent font-semibold">{card.trend}</span>
-                </div>
-              </div>
-
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-1">
-                  <div className="text-xs text-muted-foreground">{card.game}</div>
-                  <div className="text-xs font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-                    {card.rarity}
+              <div className="relative aspect-[2/3] w-full">
+                {card.image && card.image !== '' ? (
+                  <Image
+                    src={card.image}
+                    alt={`${card.name} from ${card.game}`}
+                    width={400}
+                    height={600}
+                    className="w-full h-full object-contain p-4"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-muted/20 flex items-center justify-center p-4">
+                    <div className="text-center text-muted-foreground">
+                      <div className="text-4xl mb-2">🎴</div>
+                      <p className="text-sm">Card Image</p>
+                    </div>
                   </div>
-                </div>
-                <h3 className="font-semibold text-lg mb-2 line-clamp-1" title={card.name}>
-                  {card.name}
-                </h3>
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold text-primary">{card.price}</span>
-                  <Button size="sm" variant="ghost" className="text-xs hover:bg-yellow-400/10 hover:text-yellow-600 transition-colors">
-                    View Details
-                  </Button>
+                )}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/95 to-transparent p-4">
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground capitalize">{card.game?.replace('_', ' ')}</p>
+                    <h3 className="text-lg font-bold text-foreground">{card.name}</h3>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-accent">{card.rarity || 'Common'}</p>
+                      <p className="text-sm font-semibold text-white border border-white/30 bg-black/20 backdrop-blur-sm px-2 py-1 rounded-md">{card.price}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </Card>
