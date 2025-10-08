@@ -12,8 +12,19 @@ interface CardData {
   set?: string;
 }
 
+// Simple in-memory cache for Pokemon API (since it's so slow)
+let pokemonCache: { data: CardData[], timestamp: number } | null = null;
+const POKEMON_CACHE_DURATION = 300000; // 5 minutes
+
 // Pokemon TCG API integration
 async function fetchPokemonCards(query: string, limit: number): Promise<CardData[]> {
+  // Check cache first for Pokemon since the API is very slow (25+ seconds)
+  if (pokemonCache && (Date.now() - pokemonCache.timestamp) < POKEMON_CACHE_DURATION) {
+    console.log(`🗄️ Using cached Pokemon cards (${pokemonCache.data.length} available)`);
+    const shuffled = [...pokemonCache.data].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, limit);
+  }
+  
   // Get Pokemon API key - prioritize AWS Secrets Manager in production, env vars in development
   let apiKey: string | null = null;
   
@@ -67,10 +78,18 @@ async function fetchPokemonCards(query: string, limit: number): Promise<CardData
 
   // Pokemon TCG API: https://docs.pokemontcg.io/api-reference/cards/get-card
   const baseUrl = 'https://api.pokemontcg.io/v2/cards';
+  
+  // Use simpler query for better performance - avoid complex name searches that might timeout
   const searchParams = new URLSearchParams({
-    q: query ? `name:${query}*` : '',
-    pageSize: limit.toString(),
+    pageSize: Math.min(limit, 10).toString(), // Limit to reduce response size
+    page: '1',
+    orderBy: '-dateModified' // Get recent cards which might be faster
   });
+  
+  // Only add name filter if query is short and simple to avoid timeouts
+  if (query && query.length <= 10 && /^[a-zA-Z0-9\s]+$/.test(query)) {
+    searchParams.set('q', `name:${query}*`);
+  }
 
   const url = `${baseUrl}?${searchParams}`;
   console.log(`🌐 Fetching Pokemon cards: ${url}`);
@@ -82,16 +101,24 @@ async function fetchPokemonCards(query: string, limit: number): Promise<CardData
     headers['X-Api-Key'] = apiKey;
   }
 
-  // Add timeout and retry logic for production resilience
-  const maxRetries = 2;
-  const timeoutMs = 10000; // 10 second timeout
+  // Add timeout and retry logic for production resilience  
+  // Pokemon API has been observed to take 25+ seconds, so we need a longer timeout
+  const maxRetries = 2; // Reduce retries since each attempt is very slow
+  const timeoutMs = 30000; // 30 second timeout to accommodate Pokemon API's slow response
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`🔄 Pokemon API attempt ${attempt}/${maxRetries}`);
+      console.log(`🔄 Pokemon API attempt ${attempt}/${maxRetries} - URL: ${url}`);
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      
+      // Add some delay between retries to be respectful to Pokemon API
+      if (attempt > 1) {
+        const delay = 2000 * (attempt - 1); // 2s, 4s delays
+        console.log(`⏳ Waiting ${delay}ms before Pokemon API retry ${attempt}`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
       
       const response = await fetch(url, { 
         headers,
@@ -111,7 +138,7 @@ async function fetchPokemonCards(query: string, limit: number): Promise<CardData
       
       // Success - break out of retry loop
       const data = await response.json();
-      return (data.data || []).map((card: any) => ({
+      const cards = (data.data || []).map((card: any) => ({
         id: card.id,
         name: card.name,
         game: 'pokemon',
@@ -121,6 +148,15 @@ async function fetchPokemonCards(query: string, limit: number): Promise<CardData
         rarity: card.rarity,
         set: card.set?.name,
       }));
+      
+      // Cache the successful response for future use
+      pokemonCache = {
+        data: cards,
+        timestamp: Date.now()
+      };
+      console.log(`✅ Pokemon cards cached: ${cards.length} cards`);
+      
+      return cards;
       
     } catch (error: any) {
       if (error.name === 'AbortError') {

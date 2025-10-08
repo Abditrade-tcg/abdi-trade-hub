@@ -179,6 +179,15 @@ await refetch(); // Bypasses cache
 
 ## 🔮 Future Optimizations
 
+### Pokemon API Performance Issue Resolution
+- **Issue**: Pokemon API consistently takes 25+ seconds to respond
+- **Root Cause**: Server-side performance issue with pokemontcg.io API
+- **Solution**: 
+  - Increased timeout to 30 seconds for Pokemon API
+  - Implemented aggressive caching (5min) for Pokemon responses
+  - Reduced retry attempts to avoid long wait times
+  - Cache allows instant responses after first successful load
+
 ### Potential Enhancements
 1. **Service Worker Caching**: Offline image cache
 2. **WebP Image Format**: Smaller file sizes
