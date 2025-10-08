@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { formatPrice } from "@/lib/utils";
+import CardImage from "./CardImage";
 import {
   Carousel,
   CarouselContent,
@@ -33,8 +33,12 @@ export const HeroCarousel = () => {
         
         // Randomly shuffle games and select 4 for variety (including traditional and modern games)
         const shuffledGames = [...games].sort(() => Math.random() - 0.5);
+        const selectedGames = shuffledGames.slice(0, 4);
         
-        for (const game of shuffledGames.slice(0, 4)) { // Randomly select 4 games for more variety
+        console.log(`🚀 Loading cards from ${selectedGames.length} games in parallel:`, selectedGames);
+        
+        // Fetch all games in parallel for much faster loading
+        const gamePromises = selectedGames.map(async (game) => {
           try {
             const response = await fetch(`/api/cards?game=${game}&limit=5`);
             
@@ -47,11 +51,23 @@ export const HeroCarousel = () => {
             
             // Randomly select 2 cards from the fetched cards
             const shuffledCards = [...cards].sort(() => Math.random() - 0.5);
-            allCards.push(...shuffledCards.slice(0, 2));
+            return { game, cards: shuffledCards.slice(0, 2) };
           } catch (error) {
             console.log(`❌ Failed to fetch ${game} cards:`, error);
+            return { game, cards: [] };
           }
-        }
+        });
+        
+        // Wait for all API calls to complete in parallel
+        const results = await Promise.all(gamePromises);
+        
+        // Combine all cards
+        results.forEach(({ game, cards }) => {
+          if (cards.length > 0) {
+            console.log(`✅ Loaded ${cards.length} cards from ${game}`);
+            allCards.push(...cards);
+          }
+        });
         
         if (allCards.length > 0) {
           // Map to our expected format
@@ -115,18 +131,21 @@ export const HeroCarousel = () => {
               <Card className="border-2 border-primary/20 bg-card/50 backdrop-blur-sm overflow-hidden transition-transform duration-300 hover:scale-105 hover:shadow-2xl">
                 <div className="relative aspect-[2/3] w-full max-h-[500px]">
                   {card.image && card.image !== '' ? (
-                    <Image
+                    <CardImage
                       src={card.image}
                       alt={`${card.name} from ${card.game}`}
                       width={400}
                       height={600}
                       className="w-full h-full object-contain p-4"
+                      priority={true}
+                      game={card.game}
                     />
                   ) : (
                     <div className="w-full h-full bg-muted/20 flex items-center justify-center p-4">
                       <div className="text-center text-muted-foreground">
                         <div className="text-4xl mb-2">🎴</div>
                         <p className="text-sm">Card Image</p>
+                        <p className="text-xs mt-1 opacity-75">{card.name}</p>
                       </div>
                     </div>
                   )}

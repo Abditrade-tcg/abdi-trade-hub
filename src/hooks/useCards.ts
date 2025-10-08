@@ -1,7 +1,7 @@
 // src/hooks/useCards.ts
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { backendAPIService } from '@/services/backendAPIService';
 import { cardDataService } from '@/services/cardDataService';
 import { CanonicalCard, DisplayCard } from '@/types/card';
@@ -10,6 +10,7 @@ interface UseCardsOptions {
   limit?: number;
   autoRefresh?: boolean;
   refreshInterval?: number;
+  cacheTimeout?: number; // Cache timeout in milliseconds
 }
 
 interface UseCardsReturn {
@@ -17,6 +18,14 @@ interface UseCardsReturn {
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+  fromCache: boolean;
+}
+
+// Client-side cache interface
+interface CacheEntry {
+  data: DisplayCard[];
+  timestamp: number;
+  limit: number;
 }
 
 // Game mapping
@@ -54,12 +63,22 @@ const rarityMapping: Record<string, string> = {
   'normal': 'Common'
 };
 
+// Simple in-memory cache
+const cache = new Map<string, CacheEntry>();
+
 export function useCards(options: UseCardsOptions = {}): UseCardsReturn {
-  const { limit = 8, autoRefresh = false, refreshInterval = 30000 } = options;
+  const { 
+    limit = 8, 
+    autoRefresh = false, 
+    refreshInterval = 30000,
+    cacheTimeout = 300000 // 5 minutes default cache
+  } = options;
   
   const [cards, setCards] = useState<DisplayCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [fromCache, setFromCache] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const convertToDisplayCard = (canonicalCard: any): DisplayCard => {
@@ -116,7 +135,26 @@ export function useCards(options: UseCardsOptions = {}): UseCardsReturn {
     };
   };
 
-  const fetchCards = useCallback(async (): Promise<void> => {
+  const fetchCards = useCallback(async (forceRefresh = false): Promise<void> => {
+    // Check cache first if not forcing refresh
+    const cacheKey = `cards-${limit}`;
+    const cachedEntry = cache.get(cacheKey);
+    const now = Date.now();
+    
+    if (!forceRefresh && cachedEntry && (now - cachedEntry.timestamp) < cacheTimeout) {
+      console.log(`🗄️ Loading ${cachedEntry.data.length} cards from cache`);
+      setCards(cachedEntry.data);
+      setLoading(false);
+      setFromCache(true);
+      return;
+    }
+    
+    // Cancel previous request if still running
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    abortControllerRef.current = new AbortController();
     try {
       setLoading(true);
       setError(null);
@@ -169,21 +207,33 @@ export function useCards(options: UseCardsOptions = {}): UseCardsReturn {
       }));
       
       const displayCards = canonicalCards.map(convertToDisplayCard);
+      
+      // Cache the results
+      cache.set(cacheKey, {
+        data: displayCards,
+        timestamp: now,
+        limit: limit
+      });
+      
       setCards(displayCards);
+      console.log(`✅ Successfully loaded ${displayCards.length} cards (cached for ${cacheTimeout / 1000}s)`);
       
-    } catch (err) {
-      console.error('Failed to fetch cards:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch cards');
-      
-      // Return empty array for production
-      setCards([]);
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.error('Failed to fetch cards:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch cards');
+        
+        // Return empty array for production
+        setCards([]);
+      }
     } finally {
       setLoading(false);
+      setFromCache(false);
     }
-  }, [limit]);
+  }, [limit, cacheTimeout, convertToDisplayCard]);
 
   const refetch = async (): Promise<void> => {
-    await fetchCards();
+    await fetchCards(true); // Force refresh on manual refetch
   };
 
   useEffect(() => {
@@ -204,7 +254,8 @@ export function useCards(options: UseCardsOptions = {}): UseCardsReturn {
     cards,
     loading,
     error,
-    refetch
+    refetch,
+    fromCache
   };
 }
 

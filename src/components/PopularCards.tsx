@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, TrendingUp, RefreshCw, Loader2 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { useCards } from "@/hooks/useCards";
+import CardImage from "./CardImage";
 
 const PopularCards = () => {
   const { cards, loading, error, refetch } = useCards({ 
@@ -69,12 +69,13 @@ const PopularCards = () => {
             >
               <div className="relative aspect-[2/3] w-full">
                 {card.image && card.image !== '' ? (
-                  <Image
+                  <CardImage
                     src={card.image}
                     alt={`${card.name} from ${card.game}`}
                     width={400}
                     height={600}
                     className="w-full h-full object-contain p-4"
+                    game={card.game}
                   />
                 ) : (
                   <div className="w-full h-full bg-muted/20 flex items-center justify-center p-4">
