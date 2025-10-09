@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Shield } from "lucide-react";
 import { HeroCarousel } from "./HeroCarousel";
+import Link from "next/link";
 
 const Hero = () => {
   return (
@@ -35,13 +36,17 @@ const Hero = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button size="lg" variant="accent" className="group">
-                Start Trading
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button size="lg" variant="outline">
-                Browse Cards
-              </Button>
+              <Link href="/auth">
+                <Button size="lg" variant="accent" className="group">
+                  Start Trading
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+              <Link href="/marketplace">
+                <Button size="lg" variant="outline">
+                  Browse Cards
+                </Button>
+              </Link>
             </div>
 
             {/* Stats */}

@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 const CTASection = () => {
   return (
@@ -26,13 +27,17 @@ const CTASection = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="accent" className="group text-lg px-8 py-6">
-              Get Started Free
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-6 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors">
-              Contact Sales
-            </Button>
+            <Link href="/auth">
+              <Button size="lg" variant="accent" className="group text-lg px-8 py-6">
+                Get Started Free
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
+            <Link href="/contact">
+              <Button size="lg" variant="outline" className="text-lg px-8 py-6 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors">
+                Contact Sales
+              </Button>
+            </Link>
           </div>
 
           <p className="text-sm text-muted-foreground mt-6">
