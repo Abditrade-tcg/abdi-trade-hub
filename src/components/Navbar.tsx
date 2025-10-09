@@ -7,17 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Menu, Search, ShoppingCart, Bell, User, Settings } from "lucide-react";
 import { useState, useEffect } from "react";
-// import { useSession, signOut } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { ThemeToggle } from "./ThemeToggle";
 import { useCart } from "@/contexts/CartContext";
 import { userManagementService, type UserProfile } from "@/services/userManagementService";
 
 const Navbar = () => {
   // All hooks must be called at the top level
-  // Temporarily disable next-auth until we fix the webpack issue
-  const session = null;
-  const status = 'unauthenticated';
-  // const { data: session, status } = useSession();
+  const { data: session, status } = useSession();
   const { cartCount } = useCart();
   const [mounted, setMounted] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -88,9 +85,7 @@ const Navbar = () => {
   const notificationCount = 5; // Mock notification count
 
   const handleSignOut = async () => {
-    // Temporarily disabled until next-auth webpack issue is fixed
-    // await signOut({ callbackUrl: '/' });
-    console.log('Sign out clicked - auth temporarily disabled');
+    await signOut({ callbackUrl: '/' });
   };
 
   return (
