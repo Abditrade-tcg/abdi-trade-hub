@@ -36,6 +36,12 @@ const nextConfig = {
         pathname: '/**',
       },
       {
+        protocol: 'http',
+        hostname: 'images.pokemontcg.io',
+        port: '',
+        pathname: '/**',
+      },
+      {
         protocol: 'https',
         hostname: 'images.ygoprodeck.com',
         port: '',
@@ -48,7 +54,19 @@ const nextConfig = {
         pathname: '/**',
       },
       {
+        protocol: 'http',
+        hostname: 'cards.scryfall.io',
+        port: '',
+        pathname: '/**',
+      },
+      {
         protocol: 'https',
+        hostname: 'via.placeholder.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
         hostname: 'via.placeholder.com',
         port: '',
         pathname: '/**',
@@ -84,6 +102,12 @@ const nextConfig = {
         pathname: '/**',
       },
       {
+        protocol: 'http',
+        hostname: 'www.dbs-cardgame.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
         protocol: 'https',
         hostname: 'cdn.starwarsunlimited.com',
         port: '',
@@ -97,13 +121,55 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'images.digimoncard.io',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'www.gundam-gcg.com',
         port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
+        hostname: 'en.bandaitcg-plus.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'en.bandaitcg-plus.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'www.unionarena-tcg.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'en.union-arena.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'en.union-arena.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'starwars-cardtrader.s3.amazonaws.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'starwars-cardtrader.s3.amazonaws.com',
         port: '',
         pathname: '/**',
       },

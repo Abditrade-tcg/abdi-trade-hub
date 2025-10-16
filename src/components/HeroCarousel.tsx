@@ -1,8 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { formatPrice } from "@/lib/utils";
 import CardImage from "./CardImage";
 import {
   Carousel,
@@ -12,104 +10,102 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import { backendAPIService } from "@/services/backendAPIService";
-import { cardDataService } from "@/services/cardDataService";
 import { CanonicalCard } from "@/types";
-import { isFeatureEnabled } from "@/config";
 
 export const HeroCarousel = () => {
-  const [cards, setCards] = useState<CanonicalCard[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadFeaturedCards = async () => {
-      try {
-        console.log('🎯 Loading featured cards from API_TCG services');
-        
-        const allCards = [];
-        
-        // Fetch cards from different games using our API route (handles all games)
-        const games = ['pokemon', 'yu-gi-oh', 'magic', 'one_piece', 'dragon_ball_fusion', 'digimon', 'gundam', 'union_arena', 'star_wars'] as const;
-        
-        // Randomly shuffle games and select 4 for variety (including traditional and modern games)
-        const shuffledGames = [...games].sort(() => Math.random() - 0.5);
-        const selectedGames = shuffledGames.slice(0, 4);
-        
-        console.log(`🚀 Loading cards from ${selectedGames.length} games in parallel:`, selectedGames);
-        
-        // Fetch all games in parallel for much faster loading
-        const gamePromises = selectedGames.map(async (game) => {
-          try {
-            const response = await fetch(`/api/cards?game=${game}&limit=5`);
-            
-            if (!response.ok) {
-              throw new Error(`Failed to fetch ${game} cards: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            const cards = data.cards || [];
-            
-            // Randomly select 2 cards from the fetched cards
-            const shuffledCards = [...cards].sort(() => Math.random() - 0.5);
-            return { game, cards: shuffledCards.slice(0, 2) };
-          } catch (error) {
-            console.log(`❌ Failed to fetch ${game} cards:`, error);
-            return { game, cards: [] };
-          }
-        });
-        
-        // Wait for all API calls to complete in parallel
-        const results = await Promise.all(gamePromises);
-        
-        // Combine all cards
-        results.forEach(({ game, cards }) => {
-          if (cards.length > 0) {
-            console.log(`✅ Loaded ${cards.length} cards from ${game}`);
-            allCards.push(...cards);
-          }
-        });
-        
-        if (allCards.length > 0) {
-          // Map to our expected format
-          const formattedCards = allCards.map((card) => ({
-            id: card.id,
-            name: card.name,
-            game: card.game,
-            price: card.price, // Will be 0 from API_TCG, hidden by conditional display
-            image: card.image || undefined,
-            condition: 'mint' as const,
-            rarity: card.rarity || 'Common'
-          }));
-          setCards(formattedCards);
-        } else {
-          setCards([]); // No cards available
-        }
-      } catch (error) {
-        console.error('❌ Failed to load featured cards:', error);
-        setCards([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadFeaturedCards();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="w-full max-w-lg mx-auto flex items-center justify-center h-[300px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (cards.length === 0) {
-    return (
-      <div className="w-full max-w-lg mx-auto flex items-center justify-center h-[300px]">
-        <p className="text-muted-foreground">No cards available</p>
-      </div>
-    );
-  }
+  // Hardcoded featured cards - one from each game
+  const cards: CanonicalCard[] = [
+    {
+      id: 'hero-001',
+      name: 'Charizard ex',
+      game: 'pokemon',
+      price: 4599,
+      rarity: 'Ultra Rare',
+      image: 'https://images.pokemontcg.io/base1/4_hires.png',
+      condition: 'mint'
+    },
+    {
+      id: 'hero-002',
+      name: 'Black Lotus',
+      game: 'magic',
+      price: 28000,
+      rarity: 'Rare',
+      image: 'https://cards.scryfall.io/large/front/b/d/bd8fa327-dd41-4737-8f19-2cf5eb1f7cdd.jpg',
+      condition: 'mint'
+    },
+    {
+      id: 'hero-003',
+      name: 'Blue-Eyes White Dragon',
+      game: 'yu-gi-oh',
+      price: 8500,
+      rarity: 'Ultra Rare',
+      image: 'https://images.ygoprodeck.com/images/cards/89631139.jpg',
+      condition: 'mint'
+    },
+    {
+      id: 'hero-004',
+      name: 'Monkey D. Luffy',
+      game: 'one_piece',
+      price: 3499,
+      rarity: 'Secret Rare',
+      image: 'https://limitlesstcg.nyc3.digitaloceanspaces.com/one-piece/OP01/OP01-003_p1_EN.webp',
+      condition: 'mint'
+    },
+    {
+      id: 'hero-005',
+      name: 'Son Goku',
+      game: 'dragon_ball_fusion',
+      price: 2999,
+      rarity: 'Super Rare',
+      image: 'https://images.pokemontcg.io/base1/4_hires.png', // Placeholder - Dragon Ball images not publicly available
+      condition: 'mint'
+    },
+    {
+      id: 'hero-006',
+      name: 'Omnimon',
+      game: 'digimon',
+      price: 4599,
+      rarity: 'Secret Rare',
+      image: 'https://images.digimoncard.io/images/cards/BT1-084.jpg',
+      condition: 'mint'
+    },
+    {
+      id: 'hero-007',
+      name: 'Himeno',
+      game: 'union_arena',
+      price: 1999,
+      rarity: 'Special Rare',
+      image: 'https://images.pokemontcg.io/base1/4_hires.png', // Placeholder - Union Arena images not publicly available
+      condition: 'mint'
+    },
+    {
+      id: 'hero-008',
+      name: 'RX-78-2 Gundam',
+      game: 'gundam',
+      price: 3299,
+      rarity: 'Special Rare',
+      image: 'https://images.pokemontcg.io/base1/4_hires.png', // Placeholder - Gundam images not publicly available
+      condition: 'mint'
+    },
+    {
+      id: 'hero-009',
+      name: 'Darth Vader',
+      game: 'star_wars',
+      price: 5999,
+      rarity: 'Legendary',
+      image: 'https://images.pokemontcg.io/base1/4_hires.png', // Placeholder - Star Wars images not publicly available via S3
+      condition: 'mint'
+    },
+    {
+      id: 'hero-010',
+      name: 'Pikachu VMAX',
+      game: 'pokemon',
+      price: 8950,
+      rarity: 'Secret Rare',
+      image: 'https://images.pokemontcg.io/swsh4/188_hires.png',
+      condition: 'mint'
+    }
+  ];
 
   return (
     <Carousel
@@ -153,12 +149,7 @@ export const HeroCarousel = () => {
                     <div className="space-y-1">
                       <p className="text-xs text-muted-foreground capitalize">{card.game?.replace('_', ' ')}</p>
                       <h3 className="text-lg font-bold text-foreground">{card.name}</h3>
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-accent">{card.rarity || 'Common'}</p>
-                        {typeof card.price === 'number' && card.price > 0 && (
-                          <p className="text-sm font-semibold text-white border border-white/30 bg-black/20 backdrop-blur-sm px-2 py-1 rounded-md">{formatPrice(card.price)}</p>
-                        )}
-                      </div>
+                      <p className="text-sm text-accent">{card.rarity || 'Common'}</p>
                     </div>
                   </div>
                 </div>

@@ -1,574 +1,112 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getSecret } from '@/lib/secrets';
 
 interface CardData {
   id: string;
   name: string;
   game: string;
   image?: string;
-  images?: any;
+  images?: {
+    large?: string;
+    small?: string;
+  };
   price?: number;
   rarity?: string;
   set?: string;
 }
 
-// Simple in-memory cache for Pokemon API (since it's so slow)
-let pokemonCache: { data: CardData[], timestamp: number } | null = null;
-const POKEMON_CACHE_DURATION = 300000; // 5 minutes
-
-// Pokemon TCG API integration
-async function fetchPokemonCards(query: string, limit: number): Promise<CardData[]> {
-  // Check cache first for Pokemon since the API is very slow (25+ seconds)
-  if (pokemonCache && (Date.now() - pokemonCache.timestamp) < POKEMON_CACHE_DURATION) {
-    console.log(`🗄️ Using cached Pokemon cards (${pokemonCache.data.length} available)`);
-    const shuffled = [...pokemonCache.data].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, limit);
-  }
-  
-  // Get Pokemon API key - prioritize AWS Secrets Manager in production, env vars in development
-  let apiKey: string | null = null;
-  
-  if (process.env.NODE_ENV === 'production') {
-    // Production: AWS Secrets Manager first, then env var fallback
-    try {
-      apiKey = await getSecret('pokemon-tcg-api');
-      if (apiKey && apiKey.trim() !== '') {
-        console.log('✅ Using Pokemon API key from AWS Secrets Manager');
-      } else {
-        console.log('❌ AWS Secrets Manager returned empty Pokemon key');
-        apiKey = null;
-      }
-    } catch (error) {
-      console.log('❌ AWS Secrets Manager error for Pokemon:', error.message);
-      apiKey = null;
-    }
-    
-    if (!apiKey) {
-      apiKey = process.env.POKEMON_TCG_API_KEY || null;
-      if (apiKey) {
-        console.log('✅ Using Pokemon API key from environment variable (fallback)');
-      }
-    }
-  } else {
-    // Development: Environment variable first, then AWS fallback
-    apiKey = process.env.POKEMON_TCG_API_KEY || null;
-    
-    if (apiKey) {
-      console.log('✅ Using Pokemon API key from environment variable');
-    } else {
-      try {
-        console.log('🔑 Trying AWS Secrets Manager for Pokemon key as fallback');
-        apiKey = await getSecret('pokemon-tcg-api');
-        if (apiKey && apiKey.trim() !== '') {
-          console.log('✅ Retrieved Pokemon API key from AWS Secrets Manager');
-        } else {
-          console.log('❌ AWS Secrets Manager returned empty Pokemon key');
-          apiKey = null;
-        }
-      } catch (error) {
-        console.log('❌ AWS Secrets Manager error for Pokemon:', error.message);
-        apiKey = null;
-      }
-    }
-  }
-
-  if (!apiKey) {
-    console.warn('⚠️ No Pokemon API key found - using public access (reduced rate limits)');
-  }
-
-  // Pokemon TCG API: https://docs.pokemontcg.io/api-reference/cards/get-card
-  const baseUrl = 'https://api.pokemontcg.io/v2/cards';
-  
-  // Use simpler query for better performance - avoid complex name searches that might timeout
-  const searchParams = new URLSearchParams({
-    pageSize: Math.min(limit, 10).toString(), // Limit to reduce response size
-    page: '1',
-    orderBy: '-dateModified' // Get recent cards which might be faster
-  });
-  
-  // Only add name filter if query is short and simple to avoid timeouts
-  if (query && query.length <= 10 && /^[a-zA-Z0-9\s]+$/.test(query)) {
-    searchParams.set('q', `name:${query}*`);
-  }
-
-  const url = `${baseUrl}?${searchParams}`;
-  console.log(`🌐 Fetching Pokemon cards: ${url}`);
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-  if (apiKey) {
-    headers['X-Api-Key'] = apiKey;
-  }
-
-  // Add timeout and retry logic for production resilience  
-  // Pokemon API has been observed to take 25+ seconds, so we need a longer timeout
-  const maxRetries = 2; // Reduce retries since each attempt is very slow
-  const timeoutMs = 30000; // 30 second timeout to accommodate Pokemon API's slow response
-  
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      console.log(`🔄 Pokemon API attempt ${attempt}/${maxRetries} - URL: ${url}`);
-      
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-      
-      // Add some delay between retries to be respectful to Pokemon API
-      if (attempt > 1) {
-        const delay = 2000 * (attempt - 1); // 2s, 4s delays
-        console.log(`⏳ Waiting ${delay}ms before Pokemon API retry ${attempt}`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
-      
-      const response = await fetch(url, { 
-        headers,
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        if (response.status >= 500 && attempt < maxRetries) {
-          console.warn(`⚠️ Pokemon API server error ${response.status}, retrying...`);
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Progressive delay
-          continue;
-        }
-        throw new Error(`Pokemon API error: ${response.status} ${response.statusText}`);
-      }
-      
-      // Success - break out of retry loop
-      const data = await response.json();
-      const cards = (data.data || []).map((card: any) => ({
-        id: card.id,
-        name: card.name,
-        game: 'pokemon',
-        image: card.images?.large || card.images?.small,
-        images: { large: card.images?.large, small: card.images?.small },
-        price: parseFloat(card.tcgplayer?.prices?.holofoil?.market || card.tcgplayer?.prices?.normal?.market || '0'),
-        rarity: card.rarity,
-        set: card.set?.name,
-      }));
-      
-      // Cache the successful response for future use
-      pokemonCache = {
-        data: cards,
-        timestamp: Date.now()
-      };
-      console.log(`✅ Pokemon cards cached: ${cards.length} cards`);
-      
-      return cards;
-      
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        console.warn(`⏰ Pokemon API timeout on attempt ${attempt}`);
-      } else {
-        console.warn(`❌ Pokemon API error on attempt ${attempt}:`, error.message);
-      }
-      
-      if (attempt === maxRetries) {
-        // Final attempt failed - return empty array instead of throwing
-        console.error(`🚨 Pokemon API failed after ${maxRetries} attempts, returning empty results`);
-        return [];
-      }
-      
-      // Wait before retry (progressive backoff)
-      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-    }
-  }
-
-  // This should never be reached, but just in case
-  return [];
-}
-
-// Magic: The Gathering API integration via Scryfall
-async function fetchMagicCards(query: string, limit: number): Promise<CardData[]> {
-  // Scryfall API: https://scryfall.com/docs/api (no API key needed)
-  const baseUrl = 'https://api.scryfall.com/cards/search';
-  const searchParams = new URLSearchParams({
-    q: query || '*',
-    unique: 'cards',
-    order: 'name',
-    dir: 'auto',
-    page: '1',
-  });
-
-  const url = `${baseUrl}?${searchParams}`;
-  console.log(`🌐 Fetching Magic cards: ${url}`);
-
-  // Add timeout for Magic API
-  const timeoutMs = 8000; // 8 second timeout
-  
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-    
-    const response = await fetch(url, { signal: controller.signal });
-    
-    clearTimeout(timeoutId);
-    
-    if (!response.ok) {
-      if (response.status === 404) {
-        return []; // No cards found
-      }
-      console.error(`❌ Scryfall API error: ${response.status} ${response.statusText}`);
-      return []; // Return empty instead of throwing
-    }
-    
-    const data = await response.json();
-    const cards = (data.data || []).slice(0, limit);
-    
-    return cards.map((card: any) => ({
-      id: card.id,
-      name: card.name,
-      game: 'magic',
-      image: card.image_uris?.normal || card.image_uris?.large,
-      images: { large: card.image_uris?.large, small: card.image_uris?.small },
-      price: parseFloat(card.prices?.usd || '0'),
-      rarity: card.rarity,
-      set: card.set_name,
-    }));
-    
-  } catch (error: any) {
-    if (error.name === 'AbortError') {
-      console.warn(`⏰ Magic API timeout`);
-    } else {
-      console.warn(`❌ Magic API error:`, error.message);
-    }
-    return []; // Return empty array instead of throwing
-  }
-}
-
-// Yu-Gi-Oh API integration
-async function fetchYuGiOhCards(query: string, limit: number): Promise<CardData[]> {
-  // Yu-Gi-Oh API: https://db.ygoprodeck.com/api-guide/
-  const timeoutMs = 8000; // 8 second timeout
-  
-  if (query) {
-    // Search by name if query provided
-    const searchParams = new URLSearchParams({
-      fname: query,
-      num: limit.toString(),
-    });
-    const url = `https://db.ygoprodeck.com/api/v7/cardinfo.php?${searchParams}`;
-    console.log(`🌐 Fetching Yu-Gi-Oh cards: ${url}`);
-    
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-      
-      const response = await fetch(url, { signal: controller.signal });
-      
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        if (response.status === 400) {
-          console.warn(`⚠️ Yu-Gi-Oh search "${query}" not found, returning empty results`);
-          return []; // No cards found
-        }
-        console.error(`❌ Yu-Gi-Oh API error: ${response.status} ${response.statusText}`);
-        return [];
-      }
-      
-      const data = await response.json();
-      return (data.data || []).map((card: any) => ({
-        id: card.id.toString(),
-        name: card.name,
-        game: 'yu-gi-oh',
-        image: card.card_images?.[0]?.image_url,
-        images: { large: card.card_images?.[0]?.image_url, small: card.card_images?.[0]?.image_url_small },
-        price: parseFloat(card.card_prices?.[0]?.tcgplayer_price || '0'),
-        rarity: card.rarity,
-        set: card.card_sets?.[0]?.set_name,
-      }));
-      
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        console.warn(`⏰ Yu-Gi-Oh API timeout for query "${query}"`);
-      } else {
-        console.warn(`❌ Yu-Gi-Oh API error for query "${query}":`, error.message);
-      }
-      return []; // Return empty array instead of throwing
-    }
-  } else {
-    // Get multiple random cards when no query with improved resilience
-    console.log(`🌐 Fetching ${limit} random Yu-Gi-Oh cards`);
-    const cards: CardData[] = [];
-    const maxAttempts = limit * 2; // Allow more attempts than needed cards
-    
-    for (let i = 0; i < maxAttempts && cards.length < limit; i++) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout per card
-        
-        const response = await fetch('https://db.ygoprodeck.com/api/v7/randomcard.php', {
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-          console.warn(`⚠️ Yu-Gi-Oh random card API returned ${response.status}, skipping`);
-          continue;
-        }
-        
-        const data = await response.json();
-        if (data.data && data.data[0]) {
-          const card = data.data[0];
-          cards.push({
-            id: card.id.toString(),
-            name: card.name,
-            game: 'yu-gi-oh',
-            image: card.card_images?.[0]?.image_url,
-            images: { large: card.card_images?.[0]?.image_url, small: card.card_images?.[0]?.image_url_small },
-            price: parseFloat(card.card_prices?.[0]?.tcgplayer_price || '0'),
-            rarity: card.rarity,
-            set: card.card_sets?.[0]?.set_name,
-          });
-          console.log(`✅ Successfully fetched Yu-Gi-Oh random card ${cards.length}/${limit}: ${card.name}`);
-        }
-        
-        // Add small delay between requests to be respectful to the API
-        if (cards.length < limit) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-        
-      } catch (error: any) {
-        if (error.name === 'AbortError') {
-          console.warn(`⏰ Yu-Gi-Oh random card ${i + 1} timed out`);
-        } else {
-          console.warn(`❌ Failed to fetch Yu-Gi-Oh random card ${i + 1}:`, error.message);
-        }
-      }
-    }
-    
-    console.log(`✅ Successfully fetched ${cards.length} Yu-Gi-Oh cards out of ${limit} requested`);
-    return cards;
-  }
-}
-
-// API TCG integration for multiple games
-async function fetchApiTcgCards(game: string, query: string, limit: number): Promise<CardData[]> {
-  // Get API TCG key - prioritize AWS Secrets Manager in production, env vars in development
-  let apiKey: string | null = null;
-  
-  if (process.env.NODE_ENV === 'production') {
-    // Production: AWS Secrets Manager first, then env var fallback
-    try {
-      apiKey = await getSecret('api_tcg');
-      if (apiKey && apiKey.trim() !== '') {
-        console.log('✅ Using API TCG key from AWS Secrets Manager');
-      } else {
-        console.log('❌ AWS Secrets Manager returned empty API TCG key');
-        apiKey = null;
-      }
-    } catch (error) {
-      console.log('❌ AWS Secrets Manager error for API TCG:', error.message);
-      apiKey = null;
-    }
-    
-    if (!apiKey) {
-      apiKey = process.env.API_TCG_KEY || null;
-      if (apiKey) {
-        console.log('✅ Using API TCG key from environment variable (fallback)');
-      }
-    }
-  } else {
-    // Development: Environment variable first, then AWS fallback
-    apiKey = process.env.API_TCG_KEY || null;
-    
-    if (apiKey) {
-      console.log('✅ Using API TCG key from environment variable');
-    } else {
-      try {
-        console.log('🔑 Trying AWS Secrets Manager for API TCG key as fallback');
-        apiKey = await getSecret('api_tcg');
-        if (apiKey && apiKey.trim() !== '') {
-          console.log('✅ Retrieved API TCG key from AWS Secrets Manager');
-        } else {
-          console.log('❌ AWS Secrets Manager returned empty API TCG key');
-          apiKey = null;
-        }
-      } catch (error) {
-        console.log('❌ AWS Secrets Manager error for API TCG:', error.message);
-        apiKey = null;
-      }
-    }
-  }
-
-  if (!apiKey) {
-    console.error('❌ API_TCG API key not found in environment variables or AWS Secrets Manager');
-    throw new Error('API_TCG API key not found');
-  }
-  
-  console.log(`🔑 Using API TCG key: ${apiKey.substring(0, 8)}...`);
-
-  // Game endpoint mappings for API TCG
-  const gameEndpoints: Record<string, string> = {
-    'one_piece': 'one-piece',
-    'dragon_ball_fusion': 'dragon-ball-fusion',
-    'digimon': 'digimon',
-    'union_arena': 'union-arena',
-    'gundam': 'gundam',
-    'star_wars': 'star-wars-unlimited',
-    'riftbound': 'riftbound'
-  };
-
-  const endpoint = gameEndpoints[game];
-  if (!endpoint) {
-    throw new Error(`Unsupported API TCG game: ${game}`);
-  }
-
-  // API TCG: https://docs.apitcg.com/api-reference/cards
-  const baseUrl = 'https://www.apitcg.com/api';
-  const searchParams = new URLSearchParams({
-    limit: limit.toString(),
-  });
-  
-  if (query) {
-    searchParams.append('name', query);
-  }
-
-  const url = `${baseUrl}/${endpoint}/cards?${searchParams}`;
-  console.log(`🌐 Fetching ${game} cards from API TCG: ${url}`);
-
-  // Add timeout and retry logic for production resilience
-  const maxRetries = 2;
-  const timeoutMs = 8000; // 8 second timeout for API TCG
-  
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      console.log(`🔄 API TCG ${game} attempt ${attempt}/${maxRetries}`);
-      
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-      
-      const response = await fetch(url, {
-        headers: {
-          'X-API-Key': apiKey,
-          'Content-Type': 'application/json',
-        },
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        if (response.status >= 500 && attempt < maxRetries) {
-          console.warn(`⚠️ API TCG ${game} server error ${response.status}, retrying...`);
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Progressive delay
-          continue;
-        }
-        // For client errors (4xx) or final server error, return empty instead of throwing
-        console.error(`❌ API TCG ${game} error: ${response.status} ${response.statusText}`);
-        return [];
-      }
-      
-      // Success - process the response
-      const result = await response.json();
-      const cards = result.data || result.cards || result || [];
-      
-      console.log(`✅ API TCG returned ${cards.length} cards for ${game}`);
-      
-      return cards.map((card: any) => ({
-        id: card.id || card.code,
-        name: card.name,
-        game: game,
-        image: card.images?.large || card.images?.small || card.image || card.image_url || card.imageUrl,
-        images: { 
-          large: card.images?.large || card.image || card.image_url || card.imageUrl, 
-          small: card.images?.small || card.images?.large || card.image || card.image_url || card.imageUrl 
-        },
-        price: parseFloat(card.price || '0'),
-        rarity: card.rarity,
-        set: card.set?.name || card.set,
-      }));
-      
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        console.warn(`⏰ API TCG ${game} timeout on attempt ${attempt}`);
-      } else {
-        console.warn(`❌ API TCG ${game} error on attempt ${attempt}:`, error.message);
-      }
-      
-      if (attempt === maxRetries) {
-        // Final attempt failed - return empty array instead of throwing
-        console.error(`🚨 API TCG ${game} failed after ${maxRetries} attempts, returning empty results`);
-        return [];
-      }
-      
-      // Wait before retry (progressive backoff)
-      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-    }
-  }
-
-  // This should never be reached, but just in case
-  return [];
-}
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+/**
+ * Cards API - Production-ready with S3 caching via Backend
+ * 
+ * This endpoint proxies requests to the backend Lambda API which:
+ * 1. Caches card images to S3
+ * 2. Caches card data to S3
+ * 3. Serves from cache on subsequent requests
+ * 4. Handles rate limiting and retries
+ * 5. Prevents hitting external API rate limits
+ * 
+ * Backend URL: https://9uy8yseaj4.execute-api.us-east-2.amazonaws.com/prod
+ * Backend Service: cardCatalogService.ts with S3Service integration
+ */
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<CardData[] | { error: string }>
+) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { game, name = '', limit = '20' } = req.query;
+  const { game, q, set, rarity, type, page = '1', limit = '20', sortBy, sortOrder } = req.query;
 
+  // Validate required parameters
   if (!game) {
     return res.status(400).json({ error: 'Game parameter is required' });
   }
 
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+  
+  if (!backendUrl) {
+    console.error('❌ NEXT_PUBLIC_BACKEND_API_URL not configured in environment');
+    return res.status(500).json({ error: 'Backend API not configured' });
+  }
+
   try {
-    console.log(`🔍 API Route handling ${game} cards with query: "${name}", limit: ${limit}`);
-
-    let cards: CardData[] = [];
-    const queryLimit = parseInt(limit as string) || 20;
-
-    switch (game) {
-      case 'pokemon':
-        cards = await fetchPokemonCards(name as string, queryLimit);
-        break;
-      case 'magic':
-        cards = await fetchMagicCards(name as string, queryLimit);
-        break;
-      case 'yu-gi-oh':
-        cards = await fetchYuGiOhCards(name as string, queryLimit);
-        break;
-      case 'one_piece':
-      case 'dragon_ball_fusion':
-      case 'digimon':
-      case 'union_arena':
-      case 'gundam':
-      case 'star_wars':
-      case 'riftbound':
-        cards = await fetchApiTcgCards(game as string, name as string, queryLimit);
-        break;
-      default:
-        return res.status(400).json({ error: `Unsupported game: ${game}` });
-    }
-
-    console.log(`✅ Successfully fetched ${cards.length} cards for ${game}`);
-    
-    // Add caching headers to improve performance
-    // Cache for 5 minutes to reduce API calls while keeping content relatively fresh
-    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
-    res.setHeader('CDN-Cache-Control', 'public, s-maxage=300');
-    res.setHeader('Vercel-CDN-Cache-Control', 'public, s-maxage=300');
-    
-    return res.status(200).json({ 
-      cards,
-      cached_at: new Date().toISOString(),
-      game: game,
-      count: cards.length
+    // Build query parameters for backend API
+    // Convert game name to lowercase to match backend expectations
+    const params = new URLSearchParams({
+      game: (game as string).toLowerCase(),
+      ...(q && { q: q as string }),
+      ...(set && { set: set as string }),
+      ...(rarity && { rarity: rarity as string }),
+      ...(type && { type: type as string }),
+      page: page as string,
+      limit: limit as string,
+      ...(sortBy && { sortBy: sortBy as string }),
+      ...(sortOrder && { sortOrder: sortOrder as string }),
     });
 
-  } catch (error) {
-    console.error(`❌ Error fetching ${game} cards:`, error);
+    const url = `${backendUrl}/v1/search/cards?${params}`;
+    console.log(`🔄 Proxying card request to backend (with S3 caching): ${url}`);
+
+    // Call backend API (which has S3 caching built-in via cardCatalogService)
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // Add timeout for resilience
+      signal: AbortSignal.timeout(30000), // 30 second timeout
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ Backend API error: ${response.status} ${response.statusText} - ${errorText}`);
+      return res.status(response.status).json({ 
+        error: `Backend API error: ${response.statusText}` 
+      });
+    }
+
+    const data = await response.json();
     
-    // Don't cache error responses
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    // Backend returns { success: true, data: [...] } format
+    const cards = data.data || data;
     
-    return res.status(500).json({
-      error: 'Failed to fetch cards',
-      details: error instanceof Error ? error.message : 'Unknown error'
+    console.log(`✅ Retrieved ${Array.isArray(cards) ? cards.length : 0} cards from backend (S3-cached)`);
+    return res.status(200).json(cards);
+
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorName = error instanceof Error ? error.name : '';
+    
+    if (errorName === 'TimeoutError' || errorName === 'AbortError') {
+      console.error('⏰ Backend API timeout after 30 seconds');
+      return res.status(504).json({ 
+        error: 'Backend request timeout - please try again' 
+      });
+    }
+    
+    console.error('❌ Card API error:', errorMessage);
+    return res.status(500).json({ 
+      error: errorMessage || 'Failed to fetch cards from backend' 
     });
   }
 }

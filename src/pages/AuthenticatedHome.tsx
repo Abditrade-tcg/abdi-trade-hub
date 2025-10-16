@@ -47,7 +47,7 @@ const AuthenticatedHome = () => {
   const [topTraders, setTopTraders] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  const { data: session } = useSession() || { data: null };
+  const { data: session, status } = useSession();
   const { theme, setTheme } = useTheme();
   const router = useRouter();
 
@@ -123,19 +123,32 @@ const AuthenticatedHome = () => {
     "Report suspicious activity",
   ];
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated - but only after session loading is complete
   useEffect(() => {
-    if (!session) {
+    if (status === 'unauthenticated') {
       router.push('/auth');
     }
-  }, [session, router]);
+  }, [status, router]);
   
-  if (!session) {
+  // Show loading while session is being determined
+  if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Please sign in to continue...</p>
+          <p className="text-muted-foreground">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to auth if unauthenticated
+  if (status === 'unauthenticated') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Redirecting to sign in...</p>
         </div>
       </div>
     );

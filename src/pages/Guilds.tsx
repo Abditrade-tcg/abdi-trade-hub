@@ -32,12 +32,337 @@ import logo from "@/assets/abditrade-logo.png";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
+import { Switch } from "@/components/ui/switch";
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useSession } from "next-auth/react";
+
+interface ExtendedUser {
+  id?: string;
+  name?: string;
+  email?: string;
+  image?: string;
+  role?: string;
+}
+
+interface Guild {
+  id: string;
+  name: string;
+  description: string;
+  members: number;
+  posts: number;
+  category: string;
+  image: string;
+  isJoined: boolean;
+  trending: boolean;
+  createdAt?: string;
+  createdBy?: string;
+  isPrivate?: boolean;
+}
+
+interface Activity {
+  user: string;
+  action: string;
+  guild: string;
+  time: string;
+}
+
+interface GuildStats {
+  totalGuilds: number;
+  activeMembers: number;
+  postsToday: number;
+}
 
 const Guilds = () => {
+  const { toast } = useToast();
+  const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showManageDialog, setShowManageDialog] = useState(false);
+  const [selectedGuild, setSelectedGuild] = useState<Guild | null>(null);
+  const [guilds, setGuilds] = useState<Guild[]>([]);
+  const [recentActivity, setRecentActivity] = useState<Activity[]>([]);
+  const [stats, setStats] = useState<GuildStats>({ totalGuilds: 0, activeMembers: 0, postsToday: 0 });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Helper function to check if user can manage guild
+  const canManageGuild = (guild: Guild): boolean => {
+    if (!session?.user) return false;
+    
+    const user = session.user as ExtendedUser;
+    
+    // Check if user is Trust & Safety team member
+    const isTrustAndSafety = user.role === 'trust_and_safety' || 
+                             user.role === 'admin' ||
+                             user.email?.includes('@abditrade.com');
+    
+    // Check if user is the guild creator
+    const isCreator = guild.createdBy === user.id;
+    
+    return isTrustAndSafety || isCreator;
+  };
+
+  // Fetch guilds from API
+  useEffect(() => {
+    const fetchGuilds = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await fetch('/api/guilds');
+        if (response.ok) {
+          const data = await response.json();
+          setGuilds(data.guilds || []);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load guilds');
+        console.error('Error fetching guilds:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchGuilds();
+  }, []);
+
+  // Fetch recent activity
+  useEffect(() => {
+    const fetchActivity = async () => {
+      try {
+        const response = await fetch('/api/guilds/activity');
+        if (response.ok) {
+          const data = await response.json();
+          setRecentActivity(data.activities || []);
+        }
+      } catch (err) {
+        console.error('Error fetching activity:', err);
+      }
+    };
+    fetchActivity();
+  }, []);
+
+  // Fetch guild statistics
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/guilds/stats');
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data.stats || { totalGuilds: 0, activeMembers: 0, postsToday: 0 });
+        }
+      } catch (err) {
+        console.error('Error fetching stats:', err);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  // Handle join/leave guild
+  const handleJoinGuild = async (guildId: string) => {
+    try {
+      const response = await fetch(`/api/guilds/${guildId}/join`, { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (response.ok) {
+        setGuilds(guilds.map(g => 
+          g.id === guildId ? { ...g, isJoined: true, members: g.members + 1 } : g
+        ));
+        toast({
+          title: "Success!",
+          description: "You've joined the guild.",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to join guild. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      console.error('Error joining guild:', err);
+      toast({
+        title: "Error",
+        description: "Failed to join guild. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLeaveGuild = async (guildId: string) => {
+    try {
+      const response = await fetch(`/api/guilds/${guildId}/leave`, { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (response.ok) {
+        setGuilds(guilds.map(g => 
+          g.id === guildId ? { ...g, isJoined: false, members: g.members - 1 } : g
+        ));
+        toast({
+          title: "Left Guild",
+          description: "You've left the guild.",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to leave guild. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      console.error('Error leaving guild:', err);
+      toast({
+        title: "Error",
+        description: "Failed to leave guild. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle create guild
+  const handleCreateGuild = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    
+    try {
+      const response = await fetch('/api/guilds', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.get('name'),
+          description: formData.get('description'),
+          rules: formData.get('rules'),
+          category: formData.get('category'),
+          isPrivate: formData.get('privacy') === 'private',
+        }),
+      });
+      
+      if (response.ok) {
+        const newGuild = await response.json();
+        // Add the new guild to the list
+        setGuilds([newGuild, ...guilds]);
+        // Reset the form before closing dialog
+        form.reset();
+        // Close the dialog
+        setShowCreateDialog(false);
+        // Show success toast
+        toast({
+          title: "Guild Created!",
+          description: `${newGuild.name || 'Your guild'} has been created successfully.`,
+        });
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Error",
+          description: error.message || 'Failed to create guild. Please try again.',
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      console.error('Error creating guild:', err);
+      toast({
+        title: "Error",
+        description: "Failed to create guild. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle manage guild
+  const handleManageGuild = (guild: Guild) => {
+    setSelectedGuild(guild);
+    setShowManageDialog(true);
+  };
+
+  // Handle delete guild
+  const handleDeleteGuild = async () => {
+    if (!selectedGuild) return;
+    
+    try {
+      const response = await fetch(`/api/guilds/${selectedGuild.id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (response.ok) {
+        setGuilds(guilds.filter(g => g.id !== selectedGuild.id));
+        setShowManageDialog(false);
+        setSelectedGuild(null);
+        toast({
+          title: "Guild Deleted",
+          description: "The guild has been permanently deleted.",
+        });
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Error",
+          description: error.message || 'Failed to delete guild.',
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      console.error('Error deleting guild:', err);
+      toast({
+        title: "Error",
+        description: "Failed to delete guild. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle toggle privacy
+  const handleTogglePrivacy = async () => {
+    if (!selectedGuild) return;
+    
+    try {
+      const response = await fetch(`/api/guilds/${selectedGuild.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isPrivate: !selectedGuild.isPrivate
+        })
+      });
+      
+      if (response.ok) {
+        const updatedGuild = await response.json();
+        setGuilds(guilds.map(g => g.id === selectedGuild.id ? updatedGuild : g));
+        setSelectedGuild(updatedGuild);
+        toast({
+          title: "Privacy Updated",
+          description: `Guild is now ${updatedGuild.isPrivate ? 'private' : 'public'}.`,
+        });
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Error",
+          description: error.message || 'Failed to update privacy.',
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      console.error('Error updating privacy:', err);
+      toast({
+        title: "Error",
+        description: "Failed to update privacy. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const navItems = [
     { icon: Home, label: "Home", href: "/dashboard" },
@@ -52,79 +377,46 @@ const Guilds = () => {
     { icon: AlertTriangle, label: "Disputes", href: "/disputes" },
   ];
 
-  const featuredGuilds = [
-    {
-      id: 1,
-      name: "Pokemon Masters",
-      description: "Dedicated to Pokemon TCG collectors and traders",
-      members: 12453,
-      posts: 5821,
-      category: "Pokemon",
-      image: "🎴",
-      isJoined: true,
-      trending: true,
-    },
-    {
-      id: 2,
-      name: "Magic: The Gathering Elite",
-      description: "For serious MTG collectors and competitive players",
-      members: 8932,
-      posts: 4123,
-      category: "Magic",
-      image: "🔮",
-      isJoined: false,
-      trending: true,
-    },
-    {
-      id: 3,
-      name: "Yu-Gi-Oh Duelists",
-      description: "Connect with Yu-Gi-Oh enthusiasts worldwide",
-      members: 6234,
-      posts: 2891,
-      category: "Yu-Gi-Oh",
-      image: "⚔️",
-      isJoined: true,
-      trending: false,
-    },
-    {
-      id: 4,
-      name: "Vintage Card Collectors",
-      description: "Rare and vintage cards from all TCGs",
-      members: 4521,
-      posts: 1923,
-      category: "Vintage",
-      image: "💎",
-      isJoined: false,
-      trending: true,
-    },
-    {
-      id: 5,
-      name: "Sports Card Traders",
-      description: "Baseball, basketball, football and more",
-      members: 3892,
-      posts: 1456,
-      category: "Sports Cards",
-      image: "⚾",
-      isJoined: false,
-      trending: false,
-    },
-  ];
+  // Dynamic data from state
+  const featuredGuilds = guilds.filter(g => g.trending);
+  const myGuilds = guilds.filter(g => g.isJoined);
 
-  const myGuilds = featuredGuilds.filter(g => g.isJoined);
+  // Apply search and category filters
+  const filteredGuilds = guilds.filter(guild => {
+    const matchesSearch = guild.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         guild.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === "all" || 
+                           selectedCategory === "All" || 
+                           guild.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const filteredFeatured = filteredGuilds.filter(g => g.trending);
+  const filteredMyGuilds = filteredGuilds.filter(g => g.isJoined);
+
+  // Calculate dynamic category counts
+  const categoryIcons: Record<string, string> = {
+    "All": "🎯",
+    "Pokemon": "🎴",
+    "Magic": "🔮",
+    "Yu-Gi-Oh": "⚔️",
+    "One Piece": "🏴‍☠️",
+    "Digimon": "📱",
+    "Dragon Ball": "🐉",
+    "Gundam": "🤖",
+    "Sports Cards": "⚾",
+    "Vintage": "💎",
+  };
 
   const categories = [
-    { name: "Pokemon", count: 89, icon: "🎴" },
-    { name: "Magic: The Gathering", count: 62, icon: "🔮" },
-    { name: "Yu-Gi-Oh", count: 45, icon: "⚔️" },
-    { name: "Sports Cards", count: 34, icon: "⚾" },
-    { name: "Vintage", count: 17, icon: "💎" },
-  ];
-
-  const recentActivity = [
-    { guild: "Pokemon Masters", user: "Collector123", action: "posted in", time: "2m ago" },
-    { guild: "MTG Elite", user: "CardMage", action: "joined", time: "5m ago" },
-    { guild: "Vintage Cards", user: "RetroFan", action: "started discussion", time: "12m ago" },
-    { guild: "Yu-Gi-Oh Duelists", user: "DuelMaster", action: "commented on", time: "18m ago" },
+    { name: "All", count: guilds.length, icon: categoryIcons["All"] },
+    ...Array.from(new Set(guilds.map(g => g.category)))
+      .map(cat => ({
+        name: cat,
+        count: guilds.filter(g => g.category === cat).length,
+        icon: categoryIcons[cat] || "🎴"
+      }))
+      .sort((a, b) => b.count - a.count)
   ];
 
   return (
@@ -133,7 +425,7 @@ const Guilds = () => {
       <aside className="w-64 border-r border-border bg-card/50 backdrop-blur-sm flex flex-col shadow-lg">
         <div className="p-6 border-b border-border/50">
           <Link href="/" className="flex items-center">
-            <img src={logo} alt="Abditrade" className="h-12" />
+            <img src={logo.src} alt="Abditrade" className="h-12" />
           </Link>
         </div>
 
@@ -196,7 +488,7 @@ const Guilds = () => {
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-1 right-1 h-2 w-2 bg-accent rounded-full animate-pulse" />
               </Button>
-              <Dialog>
+              <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
                 <DialogTrigger asChild>
                   <Button className="gap-2 hover:shadow-lg transition-all">
                     <Plus className="h-4 w-4" />
@@ -207,37 +499,55 @@ const Guilds = () => {
                   <DialogHeader>
                     <DialogTitle>Create a New Guild</DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-4">
+                  <form onSubmit={handleCreateGuild} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="guildName">Guild Name</Label>
-                      <Input id="guildName" placeholder="Pokemon Card Masters" />
+                      <Label htmlFor="name">Guild Name</Label>
+                      <Input id="name" name="name" placeholder="Pokemon Card Masters" required />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="description">Description</Label>
                       <Textarea
                         id="description"
+                        name="description"
                         placeholder="Tell members what this guild is about..."
                         rows={3}
+                        required
                       />
                     </div>
                     <div className="space-y-2">
+                      <Label htmlFor="rules">Guild Rules</Label>
+                      <Textarea
+                        id="rules"
+                        name="rules"
+                        placeholder="1. Be respectful to all members&#10;2. No spam or self-promotion&#10;3. Keep discussions on-topic&#10;4. Follow community guidelines"
+                        rows={4}
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">Set the rules that all members must follow</p>
+                    </div>
+                    <div className="space-y-2">
                       <Label htmlFor="category">Category</Label>
-                      <Select>
+                      <Select name="category" required>
                         <SelectTrigger>
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="pokemon">Pokemon</SelectItem>
-                          <SelectItem value="magic">Magic: The Gathering</SelectItem>
-                          <SelectItem value="yugioh">Yu-Gi-Oh</SelectItem>
-                          <SelectItem value="sports">Sports Cards</SelectItem>
-                          <SelectItem value="vintage">Vintage</SelectItem>
+                          <SelectItem value="Pokemon">Pokemon</SelectItem>
+                          <SelectItem value="Magic">Magic: The Gathering</SelectItem>
+                          <SelectItem value="Yu-Gi-Oh">Yu-Gi-Oh</SelectItem>
+                          <SelectItem value="One Piece">One Piece</SelectItem>
+                          <SelectItem value="Digimon">Digimon</SelectItem>
+                          <SelectItem value="Dragon Ball">Dragon Ball</SelectItem>
+                          <SelectItem value="Gundam">Gundam</SelectItem>
+                          <SelectItem value="Sports Cards">Sports Cards</SelectItem>
+                          <SelectItem value="Vintage">Vintage</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="privacy">Privacy</Label>
-                      <Select>
+                      <Select name="privacy" defaultValue="public">
                         <SelectTrigger>
                           <SelectValue placeholder="Select privacy" />
                         </SelectTrigger>
@@ -247,8 +557,8 @@ const Guilds = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    <Button className="w-full">Create Guild</Button>
-                  </div>
+                    <Button type="submit" className="w-full">Create Guild</Button>
+                  </form>
                 </DialogContent>
               </Dialog>
             </div>
@@ -258,7 +568,7 @@ const Guilds = () => {
         <div className="p-6">
           {/* Page Header */}
           <div className="mb-6 animate-fade-in">
-            <h1 className="text-3xl font-bold mb-2">Trading Card Guilds</h1>
+            <h1 className="text-3xl font-bold mb-2">Trading Guilds</h1>
             <p className="text-muted-foreground">Connect with collectors, share strategies, and grow your collection</p>
           </div>
 
@@ -307,35 +617,125 @@ const Guilds = () => {
                 </TabsList>
 
                 <TabsContent value="featured" className="space-y-4 mt-6">
-                  {featuredGuilds.map((guild) => (
-                    <Link key={guild.id} href={`/guilds/${guild.id}`}>
-                      <Card className="shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group">
+                  {isLoading ? (
+                    <div className="text-center py-12 text-muted-foreground">Loading guilds...</div>
+                  ) : error ? (
+                    <div className="text-center py-12 text-destructive">Error: {error}</div>
+                  ) : filteredFeatured.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">No featured guilds found</div>
+                  ) : (
+                    filteredFeatured.map((guild) => (
+                    <Card
+                      key={guild.id}
+                      className="shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                      onClick={() => window.location.href = `/guilds/${guild.id}`}
+                    >
+                      <CardContent className="p-6">
+                        <div className="flex items-start gap-4">
+                          <div className="text-4xl">{guild.image}</div>
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between mb-2">
+                              <div onClick={(e) => e.stopPropagation()}>
+                                <h3 className="text-lg font-bold flex items-center gap-2">
+                                  {guild.name}
+                                  {guild.trending && (
+                                    <Badge variant="secondary" className="gap-1">
+                                      <Flame className="h-3 w-3" />
+                                      Trending
+                                    </Badge>
+                                  )}
+                                </h3>
+                                <p className="text-sm text-muted-foreground mt-1">{guild.description}</p>
+                              </div>
+                              {guild.isJoined ? (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="gap-2"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleLeaveGuild(guild.id);
+                                  }}
+                                >
+                                  <Shield className="h-3 w-3" />
+                                  Joined
+                                </Button>
+                              ) : (
+                                <Button 
+                                  size="sm" 
+                                  className="gap-2"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleJoinGuild(guild.id);
+                                  }}
+                                >
+                                  <UserPlus className="h-3 w-3" />
+                                  Join
+                                </Button>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-4 mt-4">
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <Users className="h-4 w-4" />
+                                {guild.members.toLocaleString()} members
+                              </div>
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <MessageSquare className="h-4 w-4" />
+                                {guild.posts.toLocaleString()} posts
+                              </div>
+                              <Badge variant="outline">{guild.category}</Badge>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    ))
+                  )}
+                </TabsContent>
+
+                <TabsContent value="my-guilds" className="space-y-4 mt-6">
+                  {isLoading ? (
+                    <div className="text-center py-12 text-muted-foreground">Loading guilds...</div>
+                  ) : filteredMyGuilds.length > 0 ? (
+                    filteredMyGuilds.map((guild) => (
+                      <Card
+                        key={guild.id}
+                        className="shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                        onClick={() => window.location.href = `/guilds/${guild.id}`}
+                      >
                         <CardContent className="p-6">
                           <div className="flex items-start gap-4">
                             <div className="text-4xl">{guild.image}</div>
                             <div className="flex-1">
                               <div className="flex items-start justify-between mb-2">
                                 <div>
-                                  <h3 className="text-lg font-bold flex items-center gap-2">
-                                    {guild.name}
-                                    {guild.trending && (
-                                      <Badge variant="secondary" className="gap-1">
-                                        <Flame className="h-3 w-3" />
-                                        Trending
-                                      </Badge>
-                                    )}
-                                  </h3>
+                                  <h3 className="text-lg font-bold">{guild.name}</h3>
                                   <p className="text-sm text-muted-foreground mt-1">{guild.description}</p>
                                 </div>
-                                {guild.isJoined ? (
-                                  <Button size="sm" variant="outline" className="gap-2" onClick={(e) => e.preventDefault()}>
-                                    <Shield className="h-3 w-3" />
-                                    Joined
+                                {canManageGuild(guild) ? (
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    className="gap-2"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleManageGuild(guild);
+                                    }}
+                                  >
+                                    <Settings className="h-3 w-3" />
+                                    Manage
                                   </Button>
                                 ) : (
-                                  <Button size="sm" className="gap-2" onClick={(e) => e.preventDefault()}>
-                                    <UserPlus className="h-3 w-3" />
-                                    Join
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    className="gap-2"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      window.location.href = `/guilds/${guild.id}`;
+                                    }}
+                                  >
+                                    View Guild
                                   </Button>
                                 )}
                               </div>
@@ -348,50 +748,11 @@ const Guilds = () => {
                                   <MessageSquare className="h-4 w-4" />
                                   {guild.posts.toLocaleString()} posts
                                 </div>
-                                <Badge variant="outline">{guild.category}</Badge>
                               </div>
                             </div>
                           </div>
                         </CardContent>
                       </Card>
-                    </Link>
-                  ))}
-                </TabsContent>
-
-                <TabsContent value="my-guilds" className="space-y-4 mt-6">
-                  {myGuilds.length > 0 ? (
-                    myGuilds.map((guild) => (
-                      <Link key={guild.id} href={`/guilds/${guild.id}`}>
-                        <Card className="shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group">
-                          <CardContent className="p-6">
-                            <div className="flex items-start gap-4">
-                              <div className="text-4xl">{guild.image}</div>
-                              <div className="flex-1">
-                                <div className="flex items-start justify-between mb-2">
-                                  <div>
-                                    <h3 className="text-lg font-bold">{guild.name}</h3>
-                                    <p className="text-sm text-muted-foreground mt-1">{guild.description}</p>
-                                  </div>
-                                  <Button size="sm" variant="outline" className="gap-2" onClick={(e) => e.preventDefault()}>
-                                    <Settings className="h-3 w-3" />
-                                    Manage
-                                  </Button>
-                                </div>
-                                <div className="flex items-center gap-4 mt-4">
-                                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                    <Users className="h-4 w-4" />
-                                    {guild.members.toLocaleString()} members
-                                  </div>
-                                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                    <MessageSquare className="h-4 w-4" />
-                                    {guild.posts.toLocaleString()} posts
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </Link>
                     ))
                   ) : (
                     <Card className="shadow-lg">
@@ -408,51 +769,73 @@ const Guilds = () => {
                 </TabsContent>
 
                 <TabsContent value="trending" className="space-y-4 mt-6">
-                  {featuredGuilds
-                    .filter((g) => g.trending)
-                    .map((guild) => (
-                      <Link key={guild.id} href={`/guilds/${guild.id}`}>
-                        <Card className="shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group">
-                          <CardContent className="p-6">
-                            <div className="flex items-start gap-4">
-                              <div className="text-4xl">{guild.image}</div>
-                              <div className="flex-1">
-                                <div className="flex items-start justify-between mb-2">
-                                  <div>
-                                    <h3 className="text-lg font-bold flex items-center gap-2">
-                                      {guild.name}
-                                      <Badge variant="secondary" className="gap-1">
-                                        <TrendingUp className="h-3 w-3" />
-                                        Hot
-                                      </Badge>
-                                    </h3>
-                                    <p className="text-sm text-muted-foreground mt-1">{guild.description}</p>
-                                  </div>
-                                  {guild.isJoined ? (
-                                    <Button size="sm" variant="outline" onClick={(e) => e.preventDefault()}>Joined</Button>
-                                  ) : (
-                                    <Button size="sm" className="gap-2" onClick={(e) => e.preventDefault()}>
-                                      <UserPlus className="h-3 w-3" />
-                                      Join
-                                    </Button>
-                                  )}
+                  {isLoading ? (
+                    <div className="text-center py-12 text-muted-foreground">Loading guilds...</div>
+                  ) : filteredFeatured.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">No trending guilds found</div>
+                  ) : (
+                    filteredFeatured.map((guild) => (
+                      <Card
+                        key={guild.id}
+                        className="shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                        onClick={() => window.location.href = `/guilds/${guild.id}`}
+                      >
+                        <CardContent className="p-6">
+                          <div className="flex items-start gap-4">
+                            <div className="text-4xl">{guild.image}</div>
+                            <div className="flex-1">
+                              <div className="flex items-start justify-between mb-2">
+                                <div onClick={(e) => e.stopPropagation()}>
+                                  <h3 className="text-lg font-bold flex items-center gap-2">
+                                    {guild.name}
+                                    <Badge variant="secondary" className="gap-1">
+                                      <TrendingUp className="h-3 w-3" />
+                                      Hot
+                                    </Badge>
+                                  </h3>
+                                  <p className="text-sm text-muted-foreground mt-1">{guild.description}</p>
                                 </div>
-                                <div className="flex items-center gap-4 mt-4">
-                                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                    <Users className="h-4 w-4" />
-                                    {guild.members.toLocaleString()} members
-                                  </div>
-                                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                    <MessageSquare className="h-4 w-4" />
-                                    {guild.posts.toLocaleString()} posts
-                                  </div>
+                                {guild.isJoined ? (
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleLeaveGuild(guild.id);
+                                    }}
+                                  >
+                                    Joined
+                                  </Button>
+                                ) : (
+                                  <Button 
+                                    size="sm" 
+                                    className="gap-2"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleJoinGuild(guild.id);
+                                    }}
+                                  >
+                                    <UserPlus className="h-3 w-3" />
+                                    Join
+                                  </Button>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-4 mt-4">
+                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                  <Users className="h-4 w-4" />
+                                  {guild.members.toLocaleString()} members
+                                </div>
+                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                  <MessageSquare className="h-4 w-4" />
+                                  {guild.posts.toLocaleString()} posts
                                 </div>
                               </div>
                             </div>
-                          </CardContent>
-                        </Card>
-                      </Link>
-                    ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
                 </TabsContent>
               </Tabs>
             </div>
@@ -492,17 +875,17 @@ const Guilds = () => {
                 <CardContent className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Total Guilds</span>
-                    <span className="font-bold">247</span>
+                    <span className="font-bold">{stats.totalGuilds}</span>
                   </div>
                   <Separator />
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Active Members</span>
-                    <span className="font-bold">32,456</span>
+                    <span className="font-bold">{stats.activeMembers.toLocaleString()}</span>
                   </div>
                   <Separator />
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Posts Today</span>
-                    <span className="font-bold">1,234</span>
+                    <span className="font-bold">{stats.postsToday.toLocaleString()}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -513,13 +896,67 @@ const Guilds = () => {
                   <CardTitle className="text-sm">Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <Dialog>
+                  <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
                     <DialogTrigger asChild>
                       <Button variant="outline" className="w-full justify-start gap-2">
                         <Plus className="h-4 w-4" />
                         Create Guild
                       </Button>
                     </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Create a New Guild</DialogTitle>
+                      </DialogHeader>
+                      <form onSubmit={handleCreateGuild} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="name-sidebar">Guild Name</Label>
+                          <Input id="name-sidebar" name="name" placeholder="Pokemon Card Masters" required />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="description-sidebar">Description</Label>
+                          <Textarea
+                            id="description-sidebar"
+                            name="description"
+                            placeholder="Tell members what this guild is about..."
+                            rows={3}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="category-sidebar">Category</Label>
+                          <Select name="category" required>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Pokemon">Pokemon</SelectItem>
+                              <SelectItem value="Magic">Magic: The Gathering</SelectItem>
+                              <SelectItem value="Yu-Gi-Oh">Yu-Gi-Oh</SelectItem>
+                              <SelectItem value="One Piece">One Piece</SelectItem>
+                              <SelectItem value="Digimon">Digimon</SelectItem>
+                              <SelectItem value="Dragon Ball">Dragon Ball</SelectItem>
+                              <SelectItem value="Gundam">Gundam</SelectItem>
+                              <SelectItem value="Sports Cards">Sports Cards</SelectItem>
+                              <SelectItem value="Vintage">Vintage</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="privacy-sidebar">Privacy</Label>
+                          <Select name="privacy" defaultValue="public">
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select privacy" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="public">Public - Anyone can join</SelectItem>
+                              <SelectItem value="private">Private - Approval required</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button type="submit" className="w-full">Create Guild</Button>
+                      </form>
+                    </DialogContent>
                   </Dialog>
                   <Button variant="outline" className="w-full justify-start gap-2">
                     <Search className="h-4 w-4" />
@@ -535,9 +972,67 @@ const Guilds = () => {
           </div>
         </div>
       </main>
+
+      {/* Manage Guild Dialog */}
+      <Dialog open={showManageDialog} onOpenChange={setShowManageDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Manage Guild</DialogTitle>
+          </DialogHeader>
+          {selectedGuild && (
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">{selectedGuild.name}</h3>
+                <p className="text-sm text-muted-foreground">{selectedGuild.description}</p>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="privacy-toggle">Private Guild</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedGuild.isPrivate ? 'Approval required to join' : 'Anyone can join'}
+                  </p>
+                </div>
+                <Switch
+                  id="privacy-toggle"
+                  checked={selectedGuild.isPrivate || false}
+                  onCheckedChange={handleTogglePrivacy}
+                />
+              </div>
+
+              <div className="pt-4 border-t space-y-2">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="w-full">
+                      Delete Guild
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the guild
+                        &quot;{selectedGuild.name}&quot; and remove all associated data.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDeleteGuild}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Delete Guild
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
 export default Guilds;
-

@@ -17,6 +17,11 @@ dist-ssr
 out/
 build/
 
+# We use src/pages (Pages Router), not app directory (App Router)
+# Ignore app/ directory to prevent conflicts
+/app/
+/src/app/
+
 # Production
 /build
 

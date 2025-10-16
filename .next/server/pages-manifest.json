@@ -1,1 +1,12 @@
-{}
+{
+  "/_app": "pages/_app.js",
+  "/_error": "pages/_error.js",
+  "/_document": "pages/_document.js",
+  "/guilds": "pages/guilds.js",
+  "/guilds/[id]": "pages/guilds/[id].js",
+  "/marketplace": "pages/marketplace.js",
+  "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
+  "/api/collection/search": "pages/api/collection/search.js",
+  "/api/cards": "pages/api/cards.js",
+  "/api/pricing/suggest": "pages/api/pricing/suggest.js"
+}

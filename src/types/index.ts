@@ -48,6 +48,7 @@ export interface User {
   lastName?: string;
   userType?: 'Individual' | 'TCG Store' | 'Buyer';
   stripeAccountId?: string;
+  preferredGames?: string[];
 }
 
 export interface CognitoSession {

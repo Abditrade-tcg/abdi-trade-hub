@@ -11,8 +11,7 @@ import {
   type CarouselApi,
 } from '@/components/ui/carousel';
 import { Button } from '@/components/ui/button';
-import { isFeatureEnabled } from '@/config/environmentManager';
-import { backendAPIService } from '@/services/backendAPIService';
+import { staticCardDataService } from '@/services/staticCardDataService';
 import Link from 'next/link';
 import Autoplay from 'embla-carousel-autoplay';
 
@@ -31,41 +30,11 @@ export function HeroCarousel() {
   const [api, setApi] = useState<CarouselApi>();
 
   useEffect(() => {
-    const loadFeaturedCards = async () => {
-      try {
-        if (isFeatureEnabled('enableBackendAPI')) {
-          // Load real featured cards from backend API
-          const cards = await backendAPIService.searchCards({
-            sort: { field: 'popularity', order: 'desc' },
-            limit: 6
-          });
-          
-          if (cards && cards.length > 0) {
-            setFeaturedCards(cards.map(card => ({
-              id: card.id,
-              name: card.name,
-              price: card.price || 0,
-              image: card.image,
-              rarity: card.rarity,
-              set: card.set
-            })));
-          } else {
-            // Use fallback if no cards returned
-            setFallbackCards();
-          }
-        } else {
-          // Use fallback for development
-          setFallbackCards();
-        }
-      } catch (error) {
-        console.error('Error loading featured cards:', error);
-        setFallbackCards();
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadFeaturedCards();
+    // Use static featured cards for instant loading - no API delays
+    console.log('🎯 Loading featured cards instantly from static data');
+    const staticFeaturedCards = staticCardDataService.getFeaturedCards();
+    setFeaturedCards(staticFeaturedCards);
+    setLoading(false);
   }, []);
 
   const setFallbackCards = () => {

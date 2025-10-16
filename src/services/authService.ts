@@ -41,69 +41,41 @@ class AuthenticationService {
       identityPoolId: process.env.NEXT_PUBLIC_IDENTITY_POOL_ID || ''
     };
 
-    // Debug logging for production
-    console.log('AuthService Configuration:', {
-      region: this.config.region,
-      userPoolId: this.config.userPoolId ? 'SET' : 'MISSING',
-      userPoolWebClientId: this.config.userPoolWebClientId ? 'SET' : 'MISSING',
-      identityPoolId: this.config.identityPoolId ? 'SET' : 'MISSING'
-    });
-
     // Validate required configuration
     if (!this.config.userPoolId || !this.config.userPoolWebClientId) {
-      console.error('AuthService: Missing required Cognito configuration!', {
-        userPoolId: this.config.userPoolId,
-        userPoolWebClientId: this.config.userPoolWebClientId
-      });
+      console.error('AuthService: Missing required Cognito configuration');
     }
   }
 
   // Initialize Cognito (called on app start)
   async initialize(): Promise<void> {
     try {
-      console.log('🔄 Initializing AuthService...');
-      
-      // Try to get current user from local storage first
-      const storedUser = localStorage.getItem('auth_user');
-      if (storedUser) {
-        try {
-          this.currentUser = JSON.parse(storedUser);
-          console.log('✅ Loaded user from localStorage:', this.currentUser?.email);
-        } catch (error) {
-          console.warn('Failed to parse stored user data:', error);
-          localStorage.removeItem('auth_user');
+      // Only check localStorage on client-side (not during SSR)
+      if (typeof window !== 'undefined') {
+        const storedUser = localStorage.getItem('auth_user');
+        if (storedUser) {
+          try {
+            this.currentUser = JSON.parse(storedUser);
+          } catch (error) {
+            localStorage.removeItem('auth_user');
+          }
         }
       }
 
       // Then check with Cognito if no stored user
       if (!this.currentUser) {
-        console.log('🔍 No stored user, checking Cognito session...');
         this.currentUser = await this.getCurrentUser();
       }
-      
-      console.log('✅ AuthService initialized');
     } catch (error) {
-      console.error('❌ Failed to initialize AuthService:', error);
+      console.error('Failed to initialize AuthService:', error);
     }
   }
 
   // Sign in with email and password
   async signIn(email: string, password: string): Promise<{ user: User; needsPasswordChange?: boolean }> {
     try {
-      console.log('🔑 Signing in user:', email);
-      
-      // First check if user is already authenticated
-      console.log('🔍 Checking for existing user...');
-      const existingUser = await this.getCurrentUser();
-      if (existingUser) {
-        console.log('✅ User already authenticated, returning existing user:', existingUser.email);
-        return { user: existingUser, needsPasswordChange: false };
-      }
-      console.log('ℹ️ No existing user found, proceeding with authentication...');
-      
       // Check if Cognito is properly configured
       if (!this.config.userPoolId || !this.config.userPoolWebClientId) {
-        console.error('Cannot sign in: Auth UserPool not configured!');
         throw new Error('Auth UserPool not configured. Please check your environment variables.');
       }
       
@@ -112,13 +84,18 @@ class AuthenticationService {
       const cognitoConfigured = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID && process.env.NEXT_PUBLIC_COGNITO_USER_POOL_CLIENT_ID;
       
       if (isDev && !cognitoConfigured) {
-        console.warn('AWS Cognito not configured, using mock authentication for development');
+        // Mock user for development - extract name from email for testing
+        const emailPrefix = email.split('@')[0];
+        const nameParts = emailPrefix.split('.');
+        const firstName = nameParts[0]?.charAt(0).toUpperCase() + nameParts[0]?.slice(1) || 'Test';
+        const lastName = nameParts[1]?.charAt(0).toUpperCase() + nameParts[1]?.slice(1) || 'User';
         
-        // Mock user for development
         const mockUser: User = {
           id: 'dev-user-' + Date.now(),
-          username: email.split('@')[0],
+          username: emailPrefix,
           email: email,
+          firstName: firstName,
+          lastName: lastName,
           avatar: '/abditrade-logo.png',
           repScore: 100,
           badges: [],
@@ -132,69 +109,18 @@ class AuthenticationService {
         };
         
         this.currentUser = mockUser;
-        localStorage.setItem('auth_user', JSON.stringify(mockUser));
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('auth_user', JSON.stringify(mockUser));
+        }
         
         return { user: mockUser, needsPasswordChange: false };
       }
       
       // Use AWS Amplify for real Cognito authentication
-      let signInResult;
-      try {
-        signInResult = await amplifySignIn({
-          username: email,
-          password: password,
-        });
-      } catch (signInError: unknown) {
-        // Handle specific case where user is already authenticated
-        console.log('🔍 SignIn error caught:', signInError);
-        console.log('🔍 Error name:', signInError instanceof Error ? signInError.name : 'unknown');
-        console.log('🔍 Error message:', signInError instanceof Error ? signInError.message : 'unknown');
-        
-        if (signInError instanceof Error && 
-            (signInError.message.includes('There is already a signed in user') ||
-             signInError.name === 'InvalidUserPoolConfigurationException')) {
-          console.log('🔍 User might already be signed in, attempting to get current user...');
-          
-          try {
-            const cognitoUser = await getCurrentUser();
-            if (cognitoUser && cognitoUser.signInDetails) {
-              console.log('✅ Found existing Cognito user:', cognitoUser.signInDetails.loginId);
-              
-              // Get user attributes
-              let userAttributes: Record<string, string | undefined> = {};
-              try {
-                const attrs = await fetchAuthSession();
-                userAttributes = attrs as Record<string, string | undefined>;
-                console.log('📋 User attributes from Cognito:', userAttributes);
-              } catch (attrError) {
-                console.log('⚠️ Could not fetch user attributes:', attrError);
-              }
-              
-              const user = await this.createUserFromCognito({
-                sub: cognitoUser.userId,
-                email: cognitoUser.signInDetails.loginId,
-                email_verified: true,
-                given_name: userAttributes.given_name || 'User',
-                family_name: userAttributes.family_name || '',
-                'custom:employee_role': userAttributes['custom:employee_role'] as EmployeeRole | undefined,
-                'custom:user_status': (userAttributes['custom:user_status'] as UserStatus) || 'Individual',
-                'custom:rep_score': userAttributes['custom:rep_score'] || '0',
-                'custom:total_trades': userAttributes['custom:total_trades'] || '0',
-                'custom:completion_rate': userAttributes['custom:completion_rate'] || '0',
-                'custom:verification_level': userAttributes['custom:verification_level'] || 'unverified'
-              });
-              
-              this.currentUser = user;
-              localStorage.setItem('auth_user', JSON.stringify(user));
-              console.log('✅ Returning authenticated user:', user.email);
-              return { user, needsPasswordChange: false };
-            }
-          } catch (cognitoError) {
-            console.log('❌ Failed to get Cognito user:', cognitoError);
-          }
-        }
-        throw signInError;
-      }
+      const signInResult = await amplifySignIn({
+        username: email,
+        password: password,
+      });
 
       if (signInResult.isSignedIn) {
         // Get user attributes from Cognito
@@ -207,7 +133,6 @@ class AuthenticationService {
           email_verified: true,
           given_name: currentUser.signInDetails?.loginId?.split('@')[0] || 'User',
           family_name: '',
-          // These will be fetched from actual user data/database in production
           'custom:employee_role': undefined,
           'custom:user_status': 'Individual',
           'custom:rep_score': '0',
@@ -217,7 +142,11 @@ class AuthenticationService {
         });
 
         this.currentUser = user;
-        localStorage.setItem('auth_user', JSON.stringify(user));
+        
+        // Only use localStorage if we're in the browser (client-side)
+        if (typeof window !== 'undefined' && localStorage) {
+          localStorage.setItem('auth_user', JSON.stringify(user));
+        }
         
         return { 
           user, 
@@ -227,7 +156,7 @@ class AuthenticationService {
 
       throw new Error('Sign in was not successful');
     } catch (error) {
-      console.error('❌ Authentication failed:', error);
+      console.error('Authentication failed:', error);
       throw error;
     }
   }
@@ -244,14 +173,18 @@ class AuthenticationService {
       
       // Clear local state
       this.currentUser = null;
-      localStorage.removeItem('auth_user');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('auth_user');
+      }
       
       console.log('✅ User signed out successfully');
     } catch (error) {
       console.error('❌ Error during sign out:', error);
       // Still clear local state even if Cognito sign out fails
       this.currentUser = null;
-      localStorage.removeItem('auth_user');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('auth_user');
+      }
     }
   }
 
@@ -263,8 +196,10 @@ class AuthenticationService {
       // Sign out first
       await this.signOut();
       
-      // Clear any additional cached data
-      localStorage.clear();
+      // Clear any additional cached data (client-side only)
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+      }
       
       console.log('✅ All auth data cleared');
     } catch (error) {
@@ -280,15 +215,17 @@ class AuthenticationService {
         return this.currentUser;
       }
 
-      // Check localStorage
-      const storedUser = localStorage.getItem('auth_user');
-      if (storedUser) {
-        try {
-          this.currentUser = JSON.parse(storedUser);
-          return this.currentUser;
-        } catch (error) {
-          console.warn('Failed to parse stored user:', error);
-          localStorage.removeItem('auth_user');
+      // Check localStorage (client-side only)
+      if (typeof window !== 'undefined') {
+        const storedUser = localStorage.getItem('auth_user');
+        if (storedUser) {
+          try {
+            this.currentUser = JSON.parse(storedUser);
+            return this.currentUser;
+          } catch (error) {
+            console.warn('Failed to parse stored user:', error);
+            localStorage.removeItem('auth_user');
+          }
         }
       }
 
@@ -316,7 +253,9 @@ class AuthenticationService {
           });
 
           this.currentUser = user;
-          localStorage.setItem('auth_user', JSON.stringify(user));
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('auth_user', JSON.stringify(user));
+          }
           return user;
         }
       } catch (error) {
@@ -398,6 +337,7 @@ class AuthenticationService {
     lastName: string;
     userType: 'Individual' | 'TCG Store';
     storeName?: string;
+    preferredGames?: string[];
   }): Promise<{ user: User; needsVerification: boolean }> {
     try {
       console.log('Signing up user:', email);
@@ -421,8 +361,10 @@ class AuthenticationService {
       // Create user object for immediate return
       const user: User = {
         id: signUpResult.userId || 'temp-' + Date.now(),
-        username: `${userDetails.firstName} ${userDetails.lastName}`,
+        username: email.split('@')[0], // Use email prefix as username
         email: email,
+        firstName: userDetails.firstName,
+        lastName: userDetails.lastName,
         avatar: '/abditrade-logo.png',
         repScore: 0,
         badges: [],
@@ -433,7 +375,8 @@ class AuthenticationService {
         status: userDetails.userType as UserStatus,
         employeeRole: undefined,
         isEmployee: false,
-        storeName: userDetails.storeName
+        storeName: userDetails.storeName,
+        preferredGames: userDetails.preferredGames
       };
 
       return { 

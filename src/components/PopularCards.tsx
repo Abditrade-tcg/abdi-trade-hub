@@ -1,18 +1,74 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, TrendingUp, RefreshCw, Loader2 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
-import { useCards } from "@/hooks/useCards";
+import { staticCardDataService } from "@/services/staticCardDataService";
+import { DisplayCard } from "@/types/card";
 import CardImage from "./CardImage";
 
 const PopularCards = () => {
-  const { cards, loading, error, refetch } = useCards({ 
-    limit: 8, 
-    autoRefresh: true,
-    refreshInterval: 60000 // Refresh every minute
-  });
+  const [cards, setCards] = useState<DisplayCard[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadStaticCards = () => {
+      try {
+        console.log('🎯 PopularCards: Loading from static data service (instant performance)');
+        
+        // Get diverse cards from static service - instant loading!
+        const staticCards = staticCardDataService.getRandomCards(8);
+        
+        // Convert to DisplayCard format
+        const displayCards = staticCards.map(card => ({
+          id: card.id,
+          name: card.name,
+          game: card.game,
+          gameShort: card.gameShort,
+          rarity: card.rarity,
+          price: card.price,
+          trend: card.trend,
+          image: card.image,
+          set: card.set,
+          condition: card.condition
+        }));
+        
+        console.log(`✅ PopularCards: Loaded ${displayCards.length} cards instantly from static data`);
+        setCards(displayCards);
+        setError(null);
+      } catch (error) {
+        console.error('❌ PopularCards: Failed to load static cards:', error);
+        setError('Failed to load cards');
+        setCards([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStaticCards();
+  }, []);
+
+  const refetch = () => {
+    setLoading(true);
+    const staticCards = staticCardDataService.getRandomCards(8);
+    const displayCards = staticCards.map(card => ({
+      id: card.id,
+      name: card.name,
+      game: card.game,
+      gameShort: card.gameShort,
+      rarity: card.rarity,
+      price: card.price,
+      trend: card.trend,
+      image: card.image,
+      set: card.set,
+      condition: card.condition
+    }));
+    setCards(displayCards);
+    setLoading(false);
+  };
   return (
     <section className="py-24 relative overflow-hidden">
       {/* Background Gradient */}

@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { backendAPIService } from '@/services/backendAPIService';
 import { cardDataService } from '@/services/cardDataService';
+import { staticCardDataService } from '@/services/staticCardDataService';
 import { CanonicalCard, DisplayCard } from '@/types/card';
 
 interface UseCardsOptions {
@@ -149,88 +150,48 @@ export function useCards(options: UseCardsOptions = {}): UseCardsReturn {
       return;
     }
     
-    // Cancel previous request if still running
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    
-    abortControllerRef.current = new AbortController();
     try {
       setLoading(true);
       setError(null);
       
-      console.log('🎯 Loading cards from API_TCG services');
+      console.log('🎯 Loading cards from static data service (instant performance)');
       
-      const allCards = [];
+      // Use static cards for instant loading - no API delays
+      const staticCards = staticCardDataService.getRandomCards(limit);
       
-      // Fetch cards from different games using our API route (handles all games)
-      const games = ['pokemon', 'yu-gi-oh', 'magic', 'one_piece', 'dragon_ball_fusion', 'digimon', 'gundam', 'union_arena', 'star_wars'] as const;
-      
-      // Randomly shuffle games for variety each time
-      const shuffledGames = [...games].sort(() => Math.random() - 0.5);
-      
-      for (const game of shuffledGames) {
-        try {
-          const cardsPerGame = Math.ceil(limit / games.length);
-          
-          const response = await fetch(`/api/cards?game=${game}&limit=${cardsPerGame * 2}`);
-          
-          if (!response.ok) {
-            throw new Error(`Failed to fetch ${game} cards: ${response.status}`);
-          }
-          
-          const data = await response.json();
-          const cards = data.cards || [];
-          
-          // Randomly select cards from the fetched results
-          const shuffledCards = [...cards].sort(() => Math.random() - 0.5);
-          allCards.push(...shuffledCards.slice(0, cardsPerGame));
-        } catch (error) {
-          console.log(`❌ Failed to fetch ${game} cards:`, error);
-        }
-      }
-      
-      if (allCards.length === 0) {
-        throw new Error('No cards returned from API_TCG');
-      }
-      
-      // Convert cardDataService format to canonical format
-      const canonicalCards = allCards.map(card => ({
+      // Convert to DisplayCard format if needed
+      const displayCards: DisplayCard[] = staticCards.map(card => ({
         id: card.id,
         name: card.name,
         game: card.game,
-        price: card.price || 0, // API_TCG returns 0 for price
+        gameShort: card.gameShort,
+        rarity: card.rarity,
+        price: card.price,
+        trend: card.trend,
         image: card.image,
-        rarity: card.rarity || 'Common',
-        condition: 'mint' as const,
-        set: card.set
+        set: card.set,
+        condition: card.condition
       }));
       
-      const displayCards = canonicalCards.map(convertToDisplayCard);
+      setCards(displayCards);
+      setFromCache(false);
       
       // Cache the results
       cache.set(cacheKey, {
         data: displayCards,
         timestamp: now,
-        limit: limit
+        limit
       });
       
-      setCards(displayCards);
-      console.log(`✅ Successfully loaded ${displayCards.length} cards (cached for ${cacheTimeout / 1000}s)`);
+      console.log(`✅ Loaded ${displayCards.length} cards instantly from static data`);
       
-    } catch (err: any) {
-      if (err.name !== 'AbortError') {
-        console.error('Failed to fetch cards:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch cards');
-        
-        // Return empty array for production
-        setCards([]);
-      }
+    } catch (error) {
+      console.error('❌ Error loading static cards:', error);
+      setError('Failed to load cards');
     } finally {
       setLoading(false);
-      setFromCache(false);
     }
-  }, [limit, cacheTimeout, convertToDisplayCard]);
+  }, [limit, cacheTimeout]);
 
   const refetch = async (): Promise<void> => {
     await fetchCards(true); // Force refresh on manual refetch

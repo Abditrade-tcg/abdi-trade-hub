@@ -1,14 +1,18 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmailVerification } from "@/components/auth/EmailVerification";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { authService } from "@/services/authService";
 import { userManagementService } from "@/services/userManagementService";
 import { toast } from "@/hooks/use-toast";
@@ -18,6 +22,7 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   
   // Sign In State
   const [signInEmail, setSignInEmail] = useState("");
@@ -26,8 +31,14 @@ const Auth = () => {
   // Sign Up State
   const [signUpFirstName, setSignUpFirstName] = useState("");
   const [signUpLastName, setSignUpLastName] = useState("");
+  const [signUpUsername, setSignUpUsername] = useState("");
   const [signUpEmail, setSignUpEmail] = useState("");
   const [signUpPassword, setSignUpPassword] = useState("");
+  const [userType, setUserType] = useState<'Individual' | 'TCG Store'>('Individual');
+  const [storeName, setStoreName] = useState("");
+  const [preferredGames, setPreferredGames] = useState<string[]>([]);
+  const [wantSellerOnboarding, setWantSellerOnboarding] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   
   // Email Verification State
   const [showEmailVerification, setShowEmailVerification] = useState(false);
@@ -39,15 +50,36 @@ const Auth = () => {
     setError("");
 
     try {
-      const result = await authService.signIn(signInEmail, signInPassword);
+      // Show immediate loading feedback for better UX
+      toast({
+        title: "Signing in...",
+        description: "Please wait a moment.",
+      });
       
-      if (result.user) {
+      // Use NextAuth credentials provider for email/password
+      const result = await signIn('credentials', {
+        email: signInEmail,
+        password: signInPassword,
+        redirect: false, // Handle redirect manually for better control
+      });
+      
+      if (result?.error) {
+        setIsLoading(false);
+        throw new Error(result.error);
+      }
+      
+      if (result?.ok) {
+        // Show success message
         toast({
           title: "Welcome back!",
-          description: "You have been successfully signed in.",
+          description: "Redirecting to your dashboard...",
         });
-        router.push("/dashboard");
+        
+        // Force immediate redirect to dashboard
+        router.replace('/dashboard');
+        return; // Exit early to prevent loading state change
       }
+      
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Sign in failed. Please try again.';
       setError(errorMessage);
@@ -56,9 +88,9 @@ const Auth = () => {
         description: errorMessage,
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Only set loading false on error
     }
+    // Don't set loading false on success to maintain loading state during redirect
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -76,7 +108,10 @@ const Auth = () => {
         {
           firstName: signUpFirstName,
           lastName: signUpLastName,
-          userType: isCompanyEmail ? 'TCG Store' : 'Individual'
+          username: signUpUsername,
+          userType: userType,
+          storeName: userType === 'TCG Store' ? storeName : undefined,
+          preferredGames: preferredGames
         }
       );
       
@@ -94,7 +129,13 @@ const Auth = () => {
           title: "Account created!",
           description: "Your account has been successfully created.",
         });
-        router.push("/dashboard");
+        
+        // Redirect based on user's preference
+        if (wantSellerOnboarding) {
+          router.push("/seller-onboarding");
+        } else {
+          router.push("/dashboard");
+        }
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Sign up failed. Please try again.';
@@ -115,7 +156,13 @@ const Auth = () => {
       title: "Email verified!",
       description: "Your account is now active. Welcome to Abditrade!",
     });
-    router.push("/dashboard");
+    
+    // Redirect based on user's preference for seller onboarding
+    if (wantSellerOnboarding) {
+      router.push("/seller-onboarding");
+    } else {
+      router.push("/dashboard");
+    }
   };
 
   const handleBackToSignUp = () => {
@@ -228,25 +275,60 @@ const Auth = () => {
                       </div>
                     </div>
 
+                    {/* Remember Me & Forgot Password */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="remember-me" 
+                          checked={rememberMe}
+                          onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                        />
+                        <label htmlFor="remember-me" className="text-sm text-muted-foreground cursor-pointer">
+                          Remember me
+                        </label>
+                      </div>
+                      <Link 
+                        href="/auth/forgot-password" 
+                        className="text-sm text-primary hover:underline"
+                      >
+                        Forgot Password?
+                      </Link>
+                    </div>
+
                     <Button
                       type="submit"
                       variant="accent"
-                      className="w-full h-12 text-base"
+                      className="w-full h-12 text-base font-medium"
                       disabled={isLoading}
                     >
-                      {isLoading ? "Signing in..." : "Sign in"}
+                      {isLoading ? "Signing in..." : "Sign In"}
                     </Button>
 
-                    <p className="text-xs text-center text-muted-foreground pt-2">
-                      By signing in, you agree to our{" "}
-                      <Link href="/terms" className="text-primary hover:underline">
-                        Terms of Service
-                      </Link>{" "}
-                      and{" "}
-                      <Link href="/privacy" className="text-primary hover:underline">
-                        Privacy Policy
-                      </Link>
-                    </p>
+                    {/* Social Login Options */}
+                    <div className="relative my-6">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-gray-200" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-4 text-gray-500 font-medium">Or</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full h-12 text-base font-medium border-gray-300"
+                        onClick={() => {
+                          setIsLoading(true);
+                          signIn('google', { callbackUrl: '/dashboard' });
+                        }}
+                        disabled={isLoading}
+                      >
+                        <Mail className="w-5 h-5 mr-2" />
+                        {isLoading ? "Connecting..." : "Continue with Google"}
+                      </Button>
+                    </div>
                   </form>
                 </CardContent>
               </Card>
@@ -296,6 +378,22 @@ const Auth = () => {
                     </div>
 
                     <div className="space-y-2">
+                      <Label htmlFor="signup-username">Username</Label>
+                      <Input
+                        id="signup-username"
+                        type="text"
+                        placeholder="Choose a unique username"
+                        value={signUpUsername}
+                        onChange={(e) => setSignUpUsername(e.target.value)}
+                        required
+                        className="bg-secondary/50"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        This will be your display name in guilds and posts
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
                       <Label htmlFor="signup-email">Email</Label>
                       <Input
                         id="signup-email"
@@ -342,25 +440,139 @@ const Auth = () => {
                       </div>
                     </div>
 
+                    {/* User Type Selection */}
+                    <div className="space-y-2">
+                      <Label>Account Type</Label>
+                      <Select value={userType} onValueChange={(value: 'Individual' | 'TCG Store') => setUserType(value)}>
+                        <SelectTrigger className="bg-secondary/50">
+                          <SelectValue placeholder="Select account type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Individual">Individual Trader</SelectItem>
+                          <SelectItem value="TCG Store">TCG Store/Business</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Store Name (if TCG Store is selected) */}
+                    {userType === 'TCG Store' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="store-name">Store Name</Label>
+                        <Input
+                          id="store-name"
+                          type="text"
+                          placeholder="Enter your store name"
+                          value={storeName}
+                          onChange={(e) => setStoreName(e.target.value)}
+                          required
+                          className="bg-secondary/50"
+                        />
+                      </div>
+                    )}
+
+                    {/* Preferred Card Games */}
+                    <div className="space-y-2">
+                      <Label>Preferred Card Games (Optional)</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          'Pokemon', 'Magic: The Gathering', 'Yu-Gi-Oh!', 'Dragon Ball Super',
+                          'One Piece', 'Digimon', 'Gundam', 'Union Arena'
+                        ].map((game) => (
+                          <div key={game} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`game-${game}`}
+                              checked={preferredGames.includes(game)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setPreferredGames([...preferredGames, game]);
+                                } else {
+                                  setPreferredGames(preferredGames.filter(g => g !== game));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`game-${game}`} className="text-sm font-normal cursor-pointer">
+                              {game}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Terms & Conditions */}
+                    <div className="flex items-start space-x-2">
+                      <Checkbox 
+                        id="accept-terms" 
+                        checked={acceptTerms}
+                        onCheckedChange={(checked) => setAcceptTerms(checked as boolean)}
+                        className="mt-0.5"
+                      />
+                      <label htmlFor="accept-terms" className="text-sm text-muted-foreground leading-5 cursor-pointer">
+                        I agree to Abditrade's{" "}
+                        <Link href="/terms" className="text-primary hover:underline font-medium">
+                          Terms of Service
+                        </Link>{" "}
+                        and{" "}
+                        <Link href="/privacy" className="text-primary hover:underline font-medium">
+                          Privacy Policy
+                        </Link>
+                      </label>
+                    </div>
+
+                    {/* Seller Onboarding Option */}
+                    <div className="flex items-start space-x-2">
+                      <Checkbox 
+                        id="seller-onboarding" 
+                        checked={wantSellerOnboarding}
+                        onCheckedChange={(checked) => setWantSellerOnboarding(checked as boolean)}
+                        className="mt-0.5"
+                      />
+                      <label htmlFor="seller-onboarding" className="text-sm text-muted-foreground leading-5 cursor-pointer">
+                        I want to start selling cards immediately after registration{" "}
+                        <span className="text-primary font-medium">(Seller Onboarding)</span>
+                      </label>
+                    </div>
+
                     <Button
                       type="submit"
                       variant="accent"
-                      className="w-full h-12 text-base"
-                      disabled={isLoading}
+                      className="w-full h-12 text-base font-medium"
+                      disabled={isLoading || !acceptTerms}
                     >
                       {isLoading ? "Creating Account..." : "Create Account"}
                     </Button>
 
-                    <p className="text-xs text-center text-muted-foreground pt-2">
-                      By creating an account, you agree to our{" "}
-                      <Link href="/terms" className="text-primary hover:underline">
-                        Terms of Service
-                      </Link>{" "}
-                      and{" "}
-                      <Link href="/privacy" className="text-primary hover:underline">
-                        Privacy Policy
-                      </Link>
-                    </p>
+                    {/* Social Sign-up Options */}
+                    <div className="relative my-6">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-gray-200" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-4 text-gray-500 font-medium">Or</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full h-12 text-base font-medium border-gray-300"
+                        onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+                        disabled={isLoading}
+                      >
+                        <Mail className="w-5 h-5 mr-2" />
+                        Sign up with Google
+                      </Button>
+                      
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full h-12 text-base font-medium border-gray-300"
+                        onClick={() => signIn('cognito', { callbackUrl: '/dashboard' })}
+                        disabled={isLoading}
+                      >
+                        Sign up with AWS
+                      </Button>
+                    </div>
                   </form>
                 </CardContent>
               </Card>

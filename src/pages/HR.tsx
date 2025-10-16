@@ -72,14 +72,67 @@ const HR = () => {
     { id: "3", name: "HR Manager", email: "hr@abditrade.com", role: "HR", group: "employees", status: "Active" },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("New employee:", formData);
-    // TODO: Implement employee creation with Cognito integration
-    toast({
-      title: "Employee Added",
-      description: `${formData.firstName} ${formData.lastName} has been added to the system.`,
-    });
+    
+    if (!formData.firstName || !formData.email || !formData.lastName || !formData.role) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      // Call API to create employee
+      const response = await fetch('/api/hr/create-employee', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          employeeRole: formData.role,
+          department: formData.department || 'General',
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Employee Created Successfully",
+          description: `${formData.firstName} ${formData.lastName} has been added as ${formData.role}.`,
+        });
+        
+        // Reset form
+        setFormData({
+          firstName: "",
+          lastName: "",
+          email: "",
+          phone: "",
+          role: "",
+          department: "",
+          group: ""
+        });
+      } else {
+        throw new Error(data.error || 'Failed to create employee');
+      }
+    } catch (error) {
+      console.error('Error creating employee:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create employee. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAssignRole = async () => {
@@ -241,20 +294,25 @@ const HR = () => {
                 <div className="space-y-2">
                   <Label htmlFor="role" className="flex items-center gap-2">
                     <Shield className="h-4 w-4" />
-                    Access Role
+                    Employee Role
                   </Label>
                   <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
+                      <SelectValue placeholder="Select employee role" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ceo">CEO</SelectItem>
-                      <SelectItem value="cfo">CFO</SelectItem>
-                      <SelectItem value="hr">HR Manager</SelectItem>
-                      <SelectItem value="trust_safety">Trust & Safety</SelectItem>
-                      <SelectItem value="order_management">Order Management</SelectItem>
+                      <SelectItem value="CEO">CEO - Chief Executive Officer (Full Access)</SelectItem>
+                      <SelectItem value="CFO">CFO - Chief Financial Officer (Financial & Analytics)</SelectItem>
+                      <SelectItem value="HR">HR - Human Resources (Employee Management)</SelectItem>
+                      <SelectItem value="MANAGER">Manager - General Manager (Moderation & Reports)</SelectItem>
+                      <SelectItem value="SUPPORT">Customer Support (Tickets & Disputes)</SelectItem>
+                      <SelectItem value="WAREHOUSE">Warehouse Manager (Inventory & Shipping)</SelectItem>
+                      <SelectItem value="MODERATOR">Moderator - Content Moderator (Community Management)</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    This role determines which admin pages and features the employee can access
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -270,9 +328,18 @@ const HR = () => {
                   />
                 </div>
 
-                <Button type="submit" className="w-full">
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Add Employee
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                      Creating Employee...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Add Employee
+                    </>
+                  )}
                 </Button>
               </form>
             </CardContent>
